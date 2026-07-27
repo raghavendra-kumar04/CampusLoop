@@ -115,6 +115,17 @@ const Chat = () => {
     };
   }, [socket, activeConversation]);
 
+  // Handle room join/leave automatically when active conversation or socket changes
+  useEffect(() => {
+    if (!socket || !activeConversation?._id) return;
+
+    socket.emit('join_chat', activeConversation._id);
+
+    return () => {
+      socket.emit('leave_chat', activeConversation._id);
+    };
+  }, [socket, activeConversation?._id]);
+
   const scrollToBottom = () => {
     setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -130,13 +141,6 @@ const Chat = () => {
   const handleSelectConversation = async (conv) => {
     setActiveConversation(conv);
     setTypingUser('');
-    
-    if (socket) {
-      if (activeConversation) {
-        socket.emit('leave_chat', activeConversation._id);
-      }
-      socket.emit('join_chat', conv._id);
-    }
 
     try {
       const res = await axios.get(`/api/chats/${conv._id}/messages`);
