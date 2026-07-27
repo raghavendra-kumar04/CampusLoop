@@ -37,10 +37,8 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static upload folders for local fallback
-app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
-
 // Map REST API Endpoints
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/listings', listingRoutes);
@@ -186,6 +184,15 @@ io.on('connection', (socket) => {
       }
     }
   });
+});
+
+// Error handling middleware to catch Multer and other unhandled server errors gracefully
+app.use((err, req, res, next) => {
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({ message: 'Uploaded image file exceeds the strict 2MB limit. Please upload images less than 2MB.' });
+  }
+  console.error('Unhandled Server Error:', err);
+  res.status(err.status || 500).json({ message: err.message || 'Internal Server Error' });
 });
 
 const PORT = process.env.PORT || 5000;

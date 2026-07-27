@@ -215,13 +215,31 @@ const updateListing = async (req, res) => {
     listing.location = req.body.location || listing.location;
     listing.status = req.body.status || listing.status;
 
+    // Handle existing images
+    let existingImages = [];
+    if (req.body.existingImages) {
+      try {
+        existingImages = typeof req.body.existingImages === 'string'
+          ? JSON.parse(req.body.existingImages)
+          : req.body.existingImages;
+      } catch (e) {
+        existingImages = Array.isArray(req.body.existingImages)
+          ? req.body.existingImages
+          : [req.body.existingImages];
+      }
+    } else {
+      existingImages = listing.images;
+    }
+
     // Handle optional additional image uploads if submitted
     if (req.files && req.files.length > 0) {
       const newImages = req.files.map(file => {
         if (file.path) return file.path;
         return `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
       });
-      listing.images = [...listing.images, ...newImages];
+      listing.images = [...existingImages, ...newImages];
+    } else {
+      listing.images = existingImages;
     }
 
     const updatedListing = await listing.save();

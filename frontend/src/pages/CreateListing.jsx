@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
 const CreateListing = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+
+  const editListingId = location.state?.editListingId || null;
+  const [existingImages, setExistingImages] = useState([]);
 
   const [step, setStep] = useState(1);
 
@@ -23,6 +27,7 @@ const CreateListing = () => {
   const [previews, setPreviews] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '' });
 
   // If not logged in, redirect to auth
   useEffect(() => {
@@ -30,6 +35,35 @@ const CreateListing = () => {
       navigate('/auth');
     }
   }, [user, navigate]);
+
+  useEffect(() => {
+    if (editListingId) {
+      const fetchListingToEdit = async () => {
+        setLoading(true);
+        try {
+          const res = await axios.get(`/api/listings/${editListingId}`);
+          const listData = res.data;
+          setFormData({
+            title: listData.title,
+            description: listData.description,
+            price: listData.price,
+            category: listData.category,
+            condition: listData.condition,
+            listingType: listData.listingType,
+            location: listData.location
+          });
+          setPreviews(listData.images);
+          setExistingImages(listData.images);
+        } catch (err) {
+          console.error("Error fetching listing for editing:", err);
+          setError("Failed to load listing details for editing.");
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchListingToEdit();
+    }
+  }, [editListingId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -51,6 +85,14 @@ const CreateListing = () => {
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files);
     
+    // Check if any file is larger than 2MB
+    const oversizedFile = selectedFiles.find(file => file.size > 2 * 1024 * 1024);
+    if (oversizedFile) {
+      setToast({ show: true, message: 'Please upload images less than 2MB' });
+      setTimeout(() => setToast({ show: false, message: '' }), 4000);
+      return;
+    }
+
     if (files.length + selectedFiles.length > 5) {
       setError('You can upload up to 5 images maximum.');
       return;
@@ -64,7 +106,16 @@ const CreateListing = () => {
   };
 
   const removeFile = (index) => {
-    setFiles(prev => prev.filter((_, i) => i !== index));
+    const previewToRemove = previews[index];
+    if (previewToRemove.startsWith('blob:')) {
+      const fileBlobIndex = previews
+        .slice(0, index)
+        .filter(p => p.startsWith('blob:'))
+        .length;
+      setFiles(prev => prev.filter((_, i) => i !== fileBlobIndex));
+    } else {
+      setExistingImages(prev => prev.filter(url => url !== previewToRemove));
+    }
     setPreviews(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -104,7 +155,7 @@ const CreateListing = () => {
       return;
     }
 
-    if (files.length === 0) {
+    if (files.length === 0 && existingImages.length === 0) {
       setError('Please upload at least one product image.');
       return;
     }
@@ -124,15 +175,28 @@ const CreateListing = () => {
       data.append('images', file);
     });
 
+    if (editListingId) {
+      data.append('existingImages', JSON.stringify(existingImages));
+    }
+
     try {
-      const res = await axios.post('/api/listings', data, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      navigate(`/item/${res.data._id}`);
+      if (editListingId) {
+        const res = await axios.put(`/api/listings/${editListingId}`, data, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        navigate(`/item/${res.data._id}`);
+      } else {
+        const res = await axios.post('/api/listings', data, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        navigate(`/item/${res.data._id}`);
+      }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to publish listing. Please try again.');
+      setError(err.response?.data?.message || 'Failed to save listing. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -155,7 +219,9 @@ const CreateListing = () => {
         {/* Multi-Step Form Section */}
         <div className="lg:col-span-7 flex flex-col gap-8">
           <header>
-            <h1 className="font-headline-lg text-headline-lg text-on-surface">List a New Item</h1>
+            <h1 className="font-headline-lg text-headline-lg text-on-surface">
+              {editListingId ? 'Edit Listing Details' : 'List a New Item'}
+            </h1>
             <p className="font-body-md text-body-md text-on-surface-variant mt-2">Reach thousands of students on your campus in minutes.</p>
           </header>
 
@@ -208,7 +274,7 @@ const CreateListing = () => {
                   </div>
                   <div className="text-center">
                     <p className="font-label-md text-label-md text-on-surface">Drag & drop or click to upload</p>
-                    <p className="font-caption text-caption text-on-surface-variant">Supports JPG, PNG (Max 5 photos)</p>
+                    <p className="font-caption text-caption text-on-surface-variant">Supports JPG, PNG (Max 5 photos, under 2MB each)</p>
                   </div>
                 </div>
 
@@ -396,7 +462,7 @@ const CreateListing = () => {
                     disabled={loading}
                     className="px-10 py-4 bg-primary text-on-primary rounded-full font-label-md text-label-md hover:shadow-xl hover:scale-105 transition-all flex items-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
                   >
-                    {loading ? 'Publishing...' : 'Publish Listing'} 
+                    {loading ? 'Saving...' : (editListingId ? 'Save Changes' : 'Publish Listing')} 
                     <span className="material-symbols-outlined">rocket_launch</span>
                   </button>
                 </div>
@@ -484,6 +550,13 @@ const CreateListing = () => {
         </div>
 
       </div>
+      {/* Floating alert toast */}
+      {toast.show && (
+        <div className="fixed bottom-6 right-6 z-50 animate-slide-in flex items-center gap-xs bg-error-container text-error px-4 py-2.5 rounded-2xl shadow-xl border border-error-container/20">
+          <span className="material-symbols-outlined text-[20px]">error</span>
+          <span className="font-semibold text-xs">{toast.message}</span>
+        </div>
+      )}
     </main>
   );
 };

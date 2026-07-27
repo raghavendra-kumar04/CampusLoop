@@ -125,6 +125,18 @@ const ItemDetails = () => {
     }
   };
 
+  const handleDeleteListing = async () => {
+    if (window.confirm("Are you sure you want to delete this listing?")) {
+      try {
+        await axios.delete(`/api/listings/${id}`);
+        navigate(`/profile/${user._id}`);
+      } catch (err) {
+        console.error('Error deleting listing:', err);
+        alert(err.response?.data?.message || 'Failed to delete listing.');
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="max-w-container-max mx-auto px-margin-mobile md:px-lg py-xl flex flex-col gap-md">
@@ -372,6 +384,13 @@ const ItemDetails = () => {
                     Item Sold Completed
                   </div>
                 )}
+                <button
+                  onClick={handleDeleteListing}
+                  className="bg-red-50/10 hover:bg-red-50/20 border border-red-500/20 hover:border-red-500/40 text-error w-full py-4 rounded-xl font-label-md text-label-md flex items-center justify-center gap-sm transition-all"
+                >
+                  <span className="material-symbols-outlined">delete</span>
+                  Delete Listing
+                </button>
               </div>
             )}
 
@@ -442,30 +461,39 @@ const ItemDetails = () => {
             </button>
           </>
         ) : (
-          <div className="w-full flex gap-sm">
-            {listing.status === 'Available' ? (
-              <>
-                <button
-                  onClick={fetchPotentialBuyers}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white flex-1 h-14 rounded-xl font-label-md text-label-md flex items-center justify-center gap-xs active:scale-95 transition-all"
-                >
-                  <span className="material-symbols-outlined">check_circle</span>
-                  Mark as Sold
-                </button>
-                <button
-                  onClick={() => navigate('/sell', { state: { editListingId: listing._id } })}
-                  className="bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant/40 text-on-surface flex-1 h-14 rounded-xl font-label-md text-label-md flex items-center justify-center gap-xs active:scale-95 transition-all"
-                >
-                  <span className="material-symbols-outlined">edit</span>
-                  Edit
-                </button>
-              </>
-            ) : (
-              <div className="w-full bg-surface-container-low border border-outline-variant/20 h-14 rounded-xl flex items-center justify-center gap-sm text-on-surface-variant font-label-md text-label-md">
-                <span className="material-symbols-outlined text-emerald-500">check_circle</span>
-                Listing Sold Out
-              </div>
-            )}
+          <div className="w-full flex flex-col gap-xs">
+            <div className="w-full flex gap-sm">
+              {listing.status === 'Available' ? (
+                <>
+                  <button
+                    onClick={fetchPotentialBuyers}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white flex-1 h-14 rounded-xl font-label-md text-label-md flex items-center justify-center gap-xs active:scale-95 transition-all"
+                  >
+                    <span className="material-symbols-outlined">check_circle</span>
+                    Mark as Sold
+                  </button>
+                  <button
+                    onClick={() => navigate('/sell', { state: { editListingId: listing._id } })}
+                    className="bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant/40 text-on-surface flex-1 h-14 rounded-xl font-label-md text-label-md flex items-center justify-center gap-xs active:scale-95 transition-all"
+                  >
+                    <span className="material-symbols-outlined">edit</span>
+                    Edit
+                  </button>
+                </>
+              ) : (
+                <div className="w-full bg-surface-container-low border border-outline-variant/20 h-14 rounded-xl flex items-center justify-center gap-sm text-on-surface-variant font-label-md text-label-md">
+                  <span className="material-symbols-outlined text-emerald-500">check_circle</span>
+                  Listing Sold Out
+                </div>
+              )}
+            </div>
+            <button
+              onClick={handleDeleteListing}
+              className="bg-red-50/10 hover:bg-red-50/20 border border-red-500/20 text-error w-full h-12 rounded-xl font-label-md text-label-md flex items-center justify-center gap-xs active:scale-95 transition-all"
+            >
+              <span className="material-symbols-outlined text-[20px]">delete</span>
+              Delete Listing
+            </button>
           </div>
         )}
       </div>

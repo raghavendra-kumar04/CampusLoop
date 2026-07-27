@@ -38,6 +38,9 @@ const Profile = () => {
   const [reviewSuccess, setReviewSuccess] = useState(false);
   const [reviewLoading, setReviewLoading] = useState(false);
 
+  // Custom Toast Popup State for upload warnings
+  const [toast, setToast] = useState({ show: false, message: '' });
+
   const isOwnProfile = user && user._id === id;
 
   const fetchProfileData = async () => {
@@ -90,6 +93,13 @@ const Profile = () => {
     const file = e.target.files[0];
     if (!file) return;
 
+    // Reject files larger than 2MB strictly
+    if (file.size > 2 * 1024 * 1024) {
+      setToast({ show: true, message: 'Please upload images less than 2MB' });
+      setTimeout(() => setToast({ show: false, message: '' }), 4000);
+      return;
+    }
+
     const data = new FormData();
     data.append('avatar', file);
 
@@ -98,6 +108,8 @@ const Profile = () => {
       setProfileUser(prev => ({ ...prev, avatar: newAvatarUrl }));
     } catch (err) {
       console.error('Avatar upload failed:', err);
+      setToast({ show: true, message: err.message || 'Avatar upload failed' });
+      setTimeout(() => setToast({ show: false, message: '' }), 4000);
     }
   };
 
@@ -135,6 +147,11 @@ const Profile = () => {
 
   const handleWishlistRemove = (listingId) => {
     setSavedListings(prev => prev.filter(item => item._id !== listingId));
+  };
+
+  const handleListingDelete = (deletedId) => {
+    setProfileListings(prev => prev.filter(item => item._id !== deletedId));
+    setSavedListings(prev => prev.filter(item => item._id !== deletedId));
   };
 
   if (loading) {
@@ -337,7 +354,7 @@ const Profile = () => {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-md">
                 {profileListings.map(listing => (
-                  <ListingCard key={listing._id} listing={listing} />
+                  <ListingCard key={listing._id} listing={listing} onDelete={handleListingDelete} />
                 ))}
               </div>
             )}
@@ -354,7 +371,7 @@ const Profile = () => {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-md">
                 {savedListings.map(listing => (
-                  <ListingCard key={listing._id} listing={listing} onWishlistToggle={handleWishlistRemove} />
+                  <ListingCard key={listing._id} listing={listing} onWishlistToggle={handleWishlistRemove} onDelete={handleListingDelete} />
                 ))}
               </div>
             )}
@@ -515,6 +532,14 @@ const Profile = () => {
         )}
 
       </div>
+
+      {/* Floating alert toast */}
+      {toast.show && (
+        <div className="fixed bottom-6 right-6 z-50 animate-slide-in flex items-center gap-xs bg-error-container text-error px-4 py-2.5 rounded-2xl shadow-xl border border-error-container/20">
+          <span className="material-symbols-outlined text-[20px]">error</span>
+          <span className="font-semibold text-xs">{toast.message}</span>
+        </div>
+      )}
 
     </main>
   );

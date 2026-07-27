@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
-const ListingCard = ({ listing, onWishlistToggle, widthClass = '' }) => {
+const ListingCard = ({ listing, onWishlistToggle, onDelete, widthClass = '' }) => {
   const navigate = useNavigate();
   const { user, setUser } = useAuth();
   const [isSaved, setIsSaved] = useState(false);
@@ -52,6 +52,26 @@ const ListingCard = ({ listing, onWishlistToggle, widthClass = '' }) => {
     }
   };
 
+  const handleDeleteClick = async (e) => {
+    e.stopPropagation();
+    if (window.confirm("Are you sure you want to delete this listing?")) {
+      setLoading(true);
+      try {
+        await axios.delete(`/api/listings/${listing._id}`);
+        if (onDelete) {
+          onDelete(listing._id);
+        } else {
+          navigate('/marketplace');
+        }
+      } catch (err) {
+        console.error('Error deleting listing:', err);
+        alert(err.response?.data?.message || 'Failed to delete listing.');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   const firstImage = listing.images && listing.images.length > 0
     ? listing.images[0]
     : 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80';
@@ -84,6 +104,19 @@ const ListingCard = ({ listing, onWishlistToggle, widthClass = '' }) => {
               style={{ fontVariationSettings: isSaved ? "'FILL' 1" : "'FILL' 0" }}
             >
               favorite
+            </span>
+          </button>
+        )}
+
+        {/* Delete Button Overlay for Owner */}
+        {isOwner && (
+          <button
+            onClick={handleDeleteClick}
+            disabled={loading}
+            className="absolute top-2 right-2 bg-error/10 hover:bg-error/20 backdrop-blur-md p-1.5 rounded-full shadow-sm flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 text-error"
+          >
+            <span className="material-symbols-outlined text-[20px]">
+              delete
             </span>
           </button>
         )}
