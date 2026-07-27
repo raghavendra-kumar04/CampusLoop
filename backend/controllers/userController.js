@@ -94,7 +94,7 @@ const uploadAvatar = async (req, res) => {
 // @access  Private
 const addReview = async (req, res) => {
   try {
-    const { rating, review } = req.body;
+    const { rating, review, listingId } = req.body;
     const sellerId = req.params.id;
     const buyerId = req.user.id;
 
@@ -106,10 +106,21 @@ const addReview = async (req, res) => {
       return res.status(400).json({ message: 'You cannot rate yourself' });
     }
 
-    // Check if buyer has already reviewed this seller
-    const alreadyReviewed = await Review.findOne({ seller: sellerId, buyer: buyerId });
+    // Find if there is a listing sold to this buyer by this seller
+    let query = { seller: sellerId, buyer: buyerId, status: 'Sold' };
+    if (listingId) {
+      query._id = listingId;
+    }
+
+    const listing = await Listing.findOne(query);
+    if (!listing) {
+      return res.status(400).json({ message: 'You can only review sellers after purchasing an item from them.' });
+    }
+
+    // Check if buyer has already reviewed this specific listing
+    const alreadyReviewed = await Review.findOne({ listing: listing._id });
     if (alreadyReviewed) {
-      return res.status(400).json({ message: 'You have already reviewed this student' });
+      return res.status(400).json({ message: 'You have already reviewed this transaction' });
     }
 
     const reviewDoc = await Review.create({
@@ -117,6 +128,7 @@ const addReview = async (req, res) => {
       buyer: buyerId,
       rating,
       review,
+      listing: listing._id,
     });
 
     res.status(201).json(reviewDoc);

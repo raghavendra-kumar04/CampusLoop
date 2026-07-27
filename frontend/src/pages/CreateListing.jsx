@@ -339,9 +339,9 @@ const CreateListing = () => {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="flex flex-col gap-2">
-                    <label className="font-label-md text-label-md text-on-surface-variant">Price ($)</label>
+                    <label className="font-label-md text-label-md text-on-surface-variant">Price (₹)</label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 font-headline-md text-headline-md text-on-surface-variant">$</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 font-headline-md text-headline-md text-on-surface-variant">₹</span>
                       <input
                         name="price"
                         value={formData.price}
@@ -430,7 +430,7 @@ const CreateListing = () => {
                 
                 <div className="absolute bottom-4 right-4">
                   <span className="bg-tertiary text-on-tertiary px-4 py-2 rounded-xl text-headline-md font-headline-md shadow-lg">
-                    ${formData.price || '0.00'}
+                    ₹{formData.price || '0.00'}
                   </span>
                 </div>
               </div>

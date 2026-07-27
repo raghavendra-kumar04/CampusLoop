@@ -106,7 +106,7 @@ const Profile = () => {
     setReviewError('');
   };
 
-  const handleReviewSubmit = async (e) => {
+  const handleReviewSubmit = async (e, listingId) => {
     e.preventDefault();
     setReviewError('');
     setReviewSuccess(false);
@@ -120,10 +120,11 @@ const Profile = () => {
     try {
       await axios.post(`/api/users/${id}/rate`, {
         rating: Number(reviewForm.rating),
-        review: reviewForm.review.trim()
+        review: reviewForm.review.trim(),
+        listingId
       });
       setReviewSuccess(true);
-      setReviewForm({ rating: 5, review: '' });
+      setReviewForm({ rating: 5, review: '', listingId: '' });
       fetchProfileData();
     } catch (err) {
       setReviewError(err.response?.data?.message || 'Error submitting review.');
@@ -404,60 +405,110 @@ const Profile = () => {
             )}
 
             {/* Leave Review Form (If not own profile) */}
+            {/* Leave Review Form (If not own profile) */}
             {!isOwnProfile && user && (
-              <div className="bg-surface-container-low border border-outline-variant/15 rounded-3xl p-sm md:p-md shadow-sm space-y-sm">
-                <h3 className="font-label-md text-label-md text-outline uppercase tracking-wider">Rate this Seller</h3>
-                
-                {reviewSuccess && (
-                  <div className="p-sm bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 rounded-xl text-xs font-bold flex gap-xs items-center leading-snug">
-                    <span className="material-symbols-outlined text-[18px]">check_circle</span>
-                    <span>Review submitted successfully! Thank you.</span>
-                  </div>
-                )}
+              (() => {
+                const unreviewedPurchases = profileListings.filter(listing => {
+                  const listingBuyerId = listing.buyer?._id || listing.buyer;
+                  const isBuyer = listingBuyerId && user && listingBuyerId.toString() === user._id.toString();
+                  const isSold = listing.status === 'Sold';
+                  const isAlreadyReviewed = profileReviews.some(
+                    rev => (rev.listing?._id || rev.listing)?.toString() === listing._id.toString()
+                  );
+                  return isSold && isBuyer && !isAlreadyReviewed;
+                });
 
-                {reviewError && (
-                  <div className="p-sm bg-error-container/20 border border-error-container text-error rounded-xl text-xs flex gap-xs items-center leading-snug">
-                    <span className="material-symbols-outlined text-[18px] shrink-0">error</span>
-                    <span>{reviewError}</span>
-                  </div>
-                )}
+                if (unreviewedPurchases.length === 0) {
+                  return (
+                    <div className="bg-surface-container-low border border-outline-variant/15 rounded-3xl p-6 text-center text-on-surface-variant">
+                      <span className="material-symbols-outlined text-[36px] text-outline mb-xs">info</span>
+                      <p className="font-label-md text-label-md text-on-surface">Rate this Seller</p>
+                      <p className="text-caption text-outline max-w-[340px] mx-auto mt-xs leading-relaxed">
+                        Reviews can only be submitted for items you completed purchase on. Chat with the seller and ask them to mark the item as sold.
+                      </p>
+                    </div>
+                  );
+                }
 
-                <form onSubmit={handleReviewSubmit} className="space-y-sm">
-                  <div className="flex items-center gap-sm">
-                    <span className="text-xs font-bold text-on-surface-variant">Rating Score:</span>
-                    <select
-                      name="rating"
-                      value={reviewForm.rating}
-                      onChange={handleReviewChange}
-                      className="bg-surface-container-lowest border-none rounded-lg p-1.5 text-xs text-on-surface font-semibold focus:ring-1 focus:ring-primary outline-none"
-                    >
-                      <option value="5">5 - Excellent (Highly Recommend)</option>
-                      <option value="4">4 - Good (Very Satisfied)</option>
-                      <option value="3">3 - Average (Satisfactory)</option>
-                      <option value="2">2 - Fair (Some Issues)</option>
-                      <option value="1">1 - Poor (Not Recommended)</option>
-                    </select>
-                  </div>
+                // If we have unreviewed listings, allow submission
+                return (
+                  <div className="bg-surface-container-low border border-outline-variant/15 rounded-3xl p-sm md:p-md shadow-sm space-y-sm">
+                    <h3 className="font-label-md text-label-md text-outline uppercase tracking-wider">Rate this Seller</h3>
+                    
+                    {reviewSuccess && (
+                      <div className="p-sm bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 rounded-xl text-xs font-bold flex gap-xs items-center leading-snug">
+                        <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                        <span>Review submitted successfully! Thank you.</span>
+                      </div>
+                    )}
 
-                  <div>
-                    <label className="block text-[10px] font-bold text-on-surface-variant mb-1 uppercase">Your Review Text</label>
-                    <textarea
-                      name="review"
-                      value={reviewForm.review}
-                      onChange={handleReviewChange}
-                      rows="3"
-                      placeholder="Write details about meetup, pricing, transaction speed..."
-                      className="w-full p-sm bg-surface-container-lowest border border-outline-variant/20 rounded-xl text-xs outline-none resize-none text-on-surface focus:ring-1 focus:ring-primary"
-                    />
-                  </div>
+                    {reviewError && (
+                      <div className="p-sm bg-error-container/20 border border-error-container text-error rounded-xl text-xs flex gap-xs items-center leading-snug">
+                        <span className="material-symbols-outlined text-[18px] shrink-0">error</span>
+                        <span>{reviewError}</span>
+                      </div>
+                    )}
 
-                  <div className="flex justify-end">
-                    <Button type="submit" disabled={reviewLoading} className="py-2 px-md text-xs">
-                      {reviewLoading ? 'Submitting...' : 'Submit Review'}
-                    </Button>
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      // Auto-select listingId if not manually chosen
+                      const selectedLid = reviewForm.listingId || unreviewedPurchases[0]._id;
+                      handleReviewSubmit(e, selectedLid);
+                    }} className="space-y-sm">
+                      
+                      {unreviewedPurchases.length > 1 && (
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] font-bold text-on-surface-variant uppercase">Select Purchase Item</label>
+                          <select
+                            name="listingId"
+                            value={reviewForm.listingId || unreviewedPurchases[0]._id}
+                            onChange={(e) => setReviewForm({ ...reviewForm, listingId: e.target.value })}
+                            className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:ring-1 focus:ring-primary"
+                          >
+                            {unreviewedPurchases.map(l => (
+                              <option key={l._id} value={l._id}>{l.title}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center gap-sm">
+                        <span className="text-xs font-bold text-on-surface-variant">Rating Score:</span>
+                        <select
+                          name="rating"
+                          value={reviewForm.rating}
+                          onChange={handleReviewChange}
+                          className="bg-surface-container-lowest border-none rounded-lg p-1.5 text-xs text-on-surface font-semibold focus:ring-1 focus:ring-primary outline-none"
+                        >
+                          <option value="5">5 - Excellent (Highly Recommend)</option>
+                          <option value="4">4 - Good (Very Satisfied)</option>
+                          <option value="3">3 - Average (Satisfactory)</option>
+                          <option value="2">2 - Fair (Some Issues)</option>
+                          <option value="1">1 - Poor (Not Recommended)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-on-surface-variant mb-1 uppercase">Your Review Text</label>
+                        <textarea
+                          name="review"
+                          value={reviewForm.review}
+                          onChange={handleReviewChange}
+                          rows="3"
+                          placeholder="Write details about meetup, pricing, transaction speed..."
+                          className="w-full p-sm bg-surface-container-lowest border border-outline-variant/20 rounded-xl text-xs outline-none resize-none text-on-surface focus:ring-1 focus:ring-primary"
+                        />
+                      </div>
+
+                      <div className="flex justify-end">
+                        <Button type="submit" disabled={reviewLoading} className="py-2 px-md text-xs">
+                          {reviewLoading ? 'Submitting...' : 'Submit Review'}
+                        </Button>
+                      </div>
+                    </form>
                   </div>
-                </form>
-              </div>
+                );
+              })()
             )}
 
           </div>

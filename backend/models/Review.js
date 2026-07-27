@@ -23,6 +23,12 @@ const reviewSchema = new mongoose.Schema({
     trim: true,
     maxlength: 500,
   },
+  listing: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Listing',
+    required: true,
+    unique: true,
+  },
 }, {
   timestamps: true,
 });

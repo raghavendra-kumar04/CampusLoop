@@ -17,7 +17,7 @@ const Chat = () => {
   const [messageText, setMessageText] = useState('');
   
   const [typingUser, setTypingUser] = useState('');
-  const [isOtherUserOnline, setIsOtherUserOnline] = useState(true);
+  const [onlineUsers, setOnlineUsers] = useState([]);
   const [attachmentLoading, setAttachmentLoading] = useState(false);
 
   const messagesEndRef = useRef(null);
@@ -92,10 +92,26 @@ const Chat = () => {
       }
     });
 
+    socket.on('online_users', (userIds) => {
+      setOnlineUsers(userIds);
+    });
+
+    socket.on('user_status_change', ({ userId, status }) => {
+      setOnlineUsers(prev => {
+        if (status === 'online') {
+          return prev.includes(userId) ? prev : [...prev, userId];
+        } else {
+          return prev.filter(id => id !== userId);
+        }
+      });
+    });
+
     return () => {
       socket.off('new_message');
       socket.off('user_typing');
       socket.off('user_stop_typing');
+      socket.off('online_users');
+      socket.off('user_status_change');
     };
   }, [socket, activeConversation]);
 
@@ -256,7 +272,9 @@ const Chat = () => {
                         {recipient.name?.charAt(0).toUpperCase()}
                       </div>
                     )}
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-surface-container-lowest rounded-full"></div>
+                    <div className={`absolute bottom-0 right-0 w-3 h-3 border-2 border-surface-container-lowest rounded-full ${
+                      onlineUsers.includes(recipient._id) ? 'bg-emerald-500' : 'bg-slate-400'
+                    }`}></div>
                   </div>
 
                   <div className="flex-1 min-w-0">
@@ -309,13 +327,21 @@ const Chat = () => {
                       {getRecipient(activeConversation).name?.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-surface rounded-full"></div>
+                  <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-surface rounded-full ${
+                    onlineUsers.includes(getRecipient(activeConversation)._id) ? 'bg-emerald-500' : 'bg-slate-400'
+                  }`}></div>
                 </div>
                 <div>
                   <h3 className="font-label-md text-label-md text-on-surface">{getRecipient(activeConversation).name}</h3>
-                  <span className="text-caption font-caption text-emerald-600 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> Online
-                  </span>
+                  {onlineUsers.includes(getRecipient(activeConversation)._id) ? (
+                    <span className="text-caption font-caption text-emerald-600 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> Online
+                    </span>
+                  ) : (
+                    <span className="text-caption font-caption text-on-surface-variant/60 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 bg-slate-400 rounded-full"></span> Offline
+                    </span>
+                  )}
                 </div>
               </div>
 

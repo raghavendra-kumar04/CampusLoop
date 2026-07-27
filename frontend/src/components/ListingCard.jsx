@@ -56,6 +56,8 @@ const ListingCard = ({ listing, onWishlistToggle, widthClass = '' }) => {
     ? listing.images[0]
     : 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80';
 
+  const isOwner = user && listing.seller && (user._id === (listing.seller._id || listing.seller));
+
   return (
     <div
       onClick={handleCardClick}
@@ -71,18 +73,20 @@ const ListingCard = ({ listing, onWishlistToggle, widthClass = '' }) => {
         />
 
         {/* Wishlist Heart Overlay */}
-        <button
-          onClick={handleSaveToggle}
-          disabled={loading}
-          className="absolute top-2 right-2 bg-surface-container-lowest/90 backdrop-blur-md p-1.5 rounded-full shadow-sm flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 text-primary"
-        >
-          <span
-            className="material-symbols-outlined text-[20px] text-primary"
-            style={{ fontVariationSettings: isSaved ? "'FILL' 1" : "'FILL' 0" }}
+        {!isOwner && (
+          <button
+            onClick={handleSaveToggle}
+            disabled={loading}
+            className="absolute top-2 right-2 bg-surface-container-lowest/90 backdrop-blur-md p-1.5 rounded-full shadow-sm flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 text-primary"
           >
-            favorite
-          </span>
-        </button>
+            <span
+              className="material-symbols-outlined text-[20px] text-primary"
+              style={{ fontVariationSettings: isSaved ? "'FILL' 1" : "'FILL' 0" }}
+            >
+              favorite
+            </span>
+          </button>
+        )}
       </div>
 
       {/* Card Info Details */}
@@ -92,7 +96,7 @@ const ListingCard = ({ listing, onWishlistToggle, widthClass = '' }) => {
             {listing.title}
           </h3>
           <span className="text-tertiary font-bold text-headline-md whitespace-nowrap">
-            {listing.listingType === 'Donate' ? 'Free' : `$${listing.price}`}
+            {listing.listingType === 'Donate' ? 'Free' : `₹${listing.price}`}
           </span>
         </div>
 
@@ -116,9 +120,20 @@ const ListingCard = ({ listing, onWishlistToggle, widthClass = '' }) => {
                 <span className="material-symbols-outlined text-[14px] text-primary">person</span>
               )}
             </div>
-            <span className="text-caption font-caption text-on-surface-variant truncate">
-              {listing.seller?.name || 'Student'}
-            </span>
+            <div className="flex flex-col min-w-0">
+              <span className="text-caption font-caption text-on-surface-variant truncate font-semibold leading-tight">
+                {listing.seller?.name || 'Student'}
+              </span>
+              {listing.seller?.ratingsCount > 0 ? (
+                <div className="flex items-center gap-0.5 text-[10px] text-amber-500 font-bold mt-0.5 leading-none">
+                  <span className="material-symbols-outlined text-[11px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                  <span>{Number(listing.seller.rating).toFixed(1)}</span>
+                  <span className="text-outline font-normal">({listing.seller.ratingsCount})</span>
+                </div>
+              ) : (
+                <span className="text-[9px] text-outline mt-0.5 leading-none">No reviews</span>
+              )}
+            </div>
           </div>
 
           <span className="bg-tertiary-container/10 text-tertiary font-label-md text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">

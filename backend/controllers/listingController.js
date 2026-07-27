@@ -1,5 +1,6 @@
 const Listing = require('../models/Listing');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 
 // @desc    Get all listings with filters and sorting
 // @route   GET /api/listings
@@ -148,6 +149,39 @@ const createListing = async (req, res) => {
 
     const populatedListing = await Listing.findById(listing._id).populate('seller', 'name avatar');
 
+    // Notify all other users about this new item
+    try {
+      const users = await User.find({ _id: { $ne: req.user.id } });
+      const notifications = users.map(u => ({
+        recipient: u._id,
+        sender: req.user.id,
+        type: 'listing',
+        title: 'New Listing Available',
+        message: `${populatedListing.seller.name} uploaded a new item: "${title}"`,
+        link: `/item/${listing._id}`,
+      }));
+
+      if (notifications.length > 0) {
+        const createdNotifications = await Notification.insertMany(notifications);
+        const io = req.app.get('socketio');
+        if (io) {
+          createdNotifications.forEach((notif) => {
+            const populatedNotif = {
+              ...notif.toObject(),
+              sender: {
+                _id: req.user.id,
+                name: populatedListing.seller.name,
+                avatar: populatedListing.seller.avatar
+              }
+            };
+            io.to(notif.recipient.toString()).emit('new_notification', populatedNotif);
+          });
+        }
+      }
+    } catch (notifErr) {
+      console.error('Failed to dispatch new listing notifications:', notifErr);
+    }
+
     res.status(201).json(populatedListing);
   } catch (error) {
     console.error('CreateListing Error:', error);
@@ -236,6 +270,10 @@ const toggleSaveListing = async (req, res) => {
       return res.status(404).json({ message: 'Listing not found' });
     }
 
+    if (listing.seller.toString() === req.user.id) {
+      return res.status(400).json({ message: 'You cannot save your own listing' });
+    }
+
     const isSaved = user.savedItems.includes(listingId);
 
     if (isSaved) {
@@ -247,6 +285,31 @@ const toggleSaveListing = async (req, res) => {
     }
 
     await user.save();
+
+    // Create a notification for the seller if they saved the listing
+    if (!isSaved) {
+      try {
+        const notification = await Notification.create({
+          recipient: listing.seller,
+          sender: req.user.id,
+          type: 'save',
+          title: 'Item Saved',
+          message: `${user.name} saved your item: "${listing.title}"`,
+          link: `/item/${listing._id}`,
+        });
+
+        const populatedNotification = await Notification.findById(notification._id)
+          .populate('sender', 'name avatar');
+
+        const io = req.app.get('socketio');
+        if (io) {
+          io.to(listing.seller.toString()).emit('new_notification', populatedNotification);
+        }
+      } catch (notifErr) {
+        console.error('Failed to create save notification:', notifErr);
+      }
+    }
+
     res.json({ 
       saved: !isSaved, 
       message: isSaved ? 'Removed from saved items' : 'Saved to wishlist successfully' 
@@ -277,6 +340,101 @@ const getSavedListings = async (req, res) => {
   }
 };
 
+// @desc    Get potential buyers (users who have chatted with the seller about this listing)
+// @route   GET /api/listings/:id/potential-buyers
+// @access  Private
+const getPotentialBuyers = async (req, res) => {
+  try {
+    const listingId = req.params.id;
+    const listing = await Listing.findById(listingId);
+    if (!listing) {
+      return res.status(404).json({ message: 'Listing not found' });
+    }
+    if (listing.seller.toString() !== req.user.id) {
+      return res.status(401).json({ message: 'Not authorized. You are not the seller of this listing.' });
+    }
+
+    const Conversation = require('../models/Conversation');
+    const conversations = await Conversation.find({ listing: listingId })
+      .populate('participants', 'name avatar');
+
+    const potentialBuyers = [];
+    const seen = new Set();
+
+    conversations.forEach(conv => {
+      conv.participants.forEach(p => {
+        if (p._id.toString() !== req.user.id && !seen.has(p._id.toString())) {
+          seen.add(p._id.toString());
+          potentialBuyers.push({
+            _id: p._id,
+            name: p.name,
+            avatar: p.avatar
+          });
+        }
+      });
+    });
+
+    res.json(potentialBuyers);
+  } catch (error) {
+    console.error('GetPotentialBuyers Error:', error);
+    res.status(500).json({ message: 'Server error retrieving potential buyers' });
+  }
+};
+
+// @desc    Mark a listing as sold and register its buyer
+// @route   PUT /api/listings/:id/sold
+// @access  Private
+const markAsSold = async (req, res) => {
+  try {
+    const { buyerId } = req.body;
+    const listingId = req.params.id;
+
+    if (!buyerId) {
+      return res.status(400).json({ message: 'Please specify the buyer.' });
+    }
+
+    const listing = await Listing.findById(listingId);
+    if (!listing) {
+      return res.status(404).json({ message: 'Listing not found' });
+    }
+
+    if (listing.seller.toString() !== req.user.id) {
+      return res.status(401).json({ message: 'Not authorized. You can only mark your own items as sold.' });
+    }
+
+    listing.status = 'Sold';
+    listing.buyer = buyerId;
+    await listing.save();
+
+    // Create notification for the buyer
+    try {
+      const notification = await Notification.create({
+        recipient: buyerId,
+        sender: req.user.id,
+        type: 'purchase',
+        title: 'Purchase Completed',
+        message: `Your purchase of "${listing.title}" has been marked as completed. Please rate your experience with the seller.`,
+        link: `/review/${req.user.id}?listingId=${listing._id}`,
+      });
+
+      const populatedNotification = await Notification.findById(notification._id)
+        .populate('sender', 'name avatar');
+
+      const io = req.app.get('socketio');
+      if (io) {
+        io.to(buyerId.toString()).emit('new_notification', populatedNotification);
+      }
+    } catch (notifErr) {
+      console.error('Failed to create purchase completion notification:', notifErr);
+    }
+
+    res.json(listing);
+  } catch (error) {
+    console.error('MarkAsSold Error:', error);
+    res.status(500).json({ message: 'Server error marking listing as sold' });
+  }
+};
+
 module.exports = {
   getListings,
   getListingById,
@@ -285,4 +443,6 @@ module.exports = {
   deleteListing,
   toggleSaveListing,
   getSavedListings,
+  getPotentialBuyers,
+  markAsSold,
 };

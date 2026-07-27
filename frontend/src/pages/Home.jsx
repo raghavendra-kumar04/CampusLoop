@@ -192,7 +192,7 @@ const Home = () => {
                   </div>
                   <div>
                     <h4 className="font-label-md text-label-md text-on-surface">Sony WH-1000XM4</h4>
-                    <p className="text-tertiary font-bold text-headline-md leading-none">$180</p>
+                    <p className="text-tertiary font-bold text-headline-md leading-none">₹180</p>
                   </div>
                 </div>
 
@@ -210,7 +210,7 @@ const Home = () => {
                   </div>
                   <div>
                     <h4 className="font-label-md text-label-md text-on-surface">Nespresso Mini</h4>
-                    <p className="text-tertiary font-bold text-headline-md leading-none">$40</p>
+                    <p className="text-tertiary font-bold text-headline-md leading-none">₹40</p>
                   </div>
                 </div>
               </div>
@@ -239,7 +239,7 @@ const Home = () => {
                     Engineering
                   </span>
                   <h4 className="font-label-md text-label-md mb-xs text-on-primary-container">TI-84 Plus Calculator</h4>
-                  <p className="text-[18px] font-bold text-tertiary-fixed-dim">$35</p>
+                  <p className="text-[18px] font-bold text-tertiary-fixed-dim">₹35</p>
                 </div>
 
                 <div
@@ -250,7 +250,7 @@ const Home = () => {
                     Housing
                   </span>
                   <h4 className="font-label-md text-label-md mb-xs text-on-primary-container">Full-Length Mirror</h4>
-                  <p className="text-[18px] font-bold text-tertiary-fixed-dim">$15</p>
+                  <p className="text-[18px] font-bold text-tertiary-fixed-dim">₹15</p>
                 </div>
               </div>
             </div>

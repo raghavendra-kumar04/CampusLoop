@@ -15,6 +15,7 @@ const userRoutes = require('./routes/userRoutes');
 const listingRoutes = require('./routes/listingRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
 
 const Message = require('./models/Message');
 const Conversation = require('./models/Conversation');
@@ -45,6 +46,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/listings', listingRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // Simple Healthcheck route
 app.get('/api/health', (req, res) => {
@@ -60,6 +62,8 @@ const io = socketIO(server, {
   }
 });
 
+app.set('socketio', io);
+
 io.use((socket, next) => {
   const token = socket.handshake.auth.token || socket.handshake.query.token;
   if (!token) {
@@ -74,13 +78,26 @@ io.use((socket, next) => {
   }
 });
 
-// Store active users and their socket IDs
-const activeUsers = new Map(); // userId -> socketId
+// Store active users and their active socket IDs
+const activeUsers = new Map(); // userId string -> Set of socketId strings
 
 io.on('connection', (socket) => {
   const userId = socket.userId;
-  activeUsers.set(userId, socket.id);
-  console.log(`User connected: ${userId} (Socket: ${socket.id})`);
+  
+  if (!activeUsers.has(userId)) {
+    activeUsers.set(userId, new Set());
+  }
+  activeUsers.get(userId).add(socket.id);
+  console.log(`User connected: ${userId} (Socket: ${socket.id}). Active connections: ${activeUsers.get(userId).size}`);
+
+  // Broadcast to all clients that this user is online (if first socket connection)
+  if (activeUsers.get(userId).size === 1) {
+    io.emit('user_status_change', { userId, status: 'online' });
+  }
+
+  // Send the list of currently online user IDs to the newly connected socket
+  const onlineUserIds = Array.from(activeUsers.keys());
+  socket.emit('online_users', onlineUserIds);
 
   // Join a personal room to receive direct notifications
   socket.join(userId);
@@ -142,7 +159,7 @@ io.on('connection', (socket) => {
           type: 'chat',
           title: 'New Message',
           message: `${populatedMessage.sender.name} sent you a message: "${content ? content.substring(0, 30) : 'Sent an image'}"`,
-          link: `/chat`, // Route on frontend client
+          link: `/messages`, // Updated from '/chat' to '/messages'
         });
 
         const populatedNotification = await Notification.findById(notification._id)
@@ -157,8 +174,17 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    activeUsers.delete(userId);
-    console.log(`User disconnected: ${userId}`);
+    const userSockets = activeUsers.get(userId);
+    if (userSockets) {
+      userSockets.delete(socket.id);
+      console.log(`Socket disconnected: ${socket.id} for user ${userId}. Connections left: ${userSockets.size}`);
+      
+      if (userSockets.size === 0) {
+        activeUsers.delete(userId);
+        io.emit('user_status_change', { userId, status: 'offline' });
+        console.log(`User ${userId} went completely offline`);
+      }
+    }
   });
 });
 

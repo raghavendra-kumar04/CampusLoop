@@ -276,7 +276,7 @@ const Marketplace = () => {
               {/* Max Price chip */}
               {maxPrice && (
                 <div className="flex-shrink-0 px-4 py-2 bg-primary text-on-primary rounded-full flex items-center gap-xs text-sm font-medium shadow-sm cursor-pointer">
-                  <span>Under ${maxPrice}</span>
+                  <span>Under ₹{maxPrice}</span>
                   <span onClick={() => clearFilter('maxPrice')} className="material-symbols-outlined text-[16px]">close</span>
                 </div>
               )}
@@ -294,7 +294,7 @@ const Marketplace = () => {
                     onClick={() => updateURL({ maxPrice: '50' })}
                     className="flex-shrink-0 px-4 py-2 bg-surface-container-high text-on-surface rounded-full flex items-center gap-xs text-sm font-medium border border-outline-variant/30 cursor-pointer hover:bg-surface-container-highest transition-colors"
                   >
-                    <span>Under $50</span>
+                    <span>Under ₹50</span>
                   </div>
                 </>
               )}

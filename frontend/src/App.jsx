@@ -13,6 +13,8 @@ import Chat from './pages/Chat';
 import Profile from './pages/Profile';
 import CreateListing from './pages/CreateListing';
 import Auth from './pages/Auth';
+import Notifications from './pages/Notifications';
+import Review from './pages/Review';
 
 // Protected Route Guard
 const ProtectedRoute = ({ children }) => {
@@ -69,6 +71,22 @@ function AppContent() {
               element={
                 <ProtectedRoute>
                   <CreateListing />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute>
+                  <Notifications />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/review/:sellerId"
+              element={
+                <ProtectedRoute>
+                  <Review />
                 </ProtectedRoute>
               }
             />

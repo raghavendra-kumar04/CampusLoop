@@ -105,7 +105,7 @@ const Navbar = () => {
 
           {/* Notifications Button */}
           <button
-            onClick={() => user ? navigate('/profile/' + user._id) : navigate('/auth')}
+            onClick={() => user ? navigate('/notifications') : navigate('/auth')}
             className="p-2 hover:bg-surface-container-high/50 dark:hover:bg-surface-container-highest/10 rounded-lg transition-all duration-200 active:scale-95 relative"
           >
             <span className="material-symbols-outlined text-on-surface-variant dark:text-outline-variant">notifications</span>

@@ -8,6 +8,8 @@ const {
   deleteListing,
   toggleSaveListing,
   getSavedListings,
+  getPotentialBuyers,
+  markAsSold,
 } = require('../controllers/listingController');
 const { protect } = require('../middleware/auth');
 const { listingLimiter } = require('../middleware/rateLimiter');
@@ -23,6 +25,8 @@ router.post('/:id/save', protect, toggleSaveListing);
 
 // Listings CRUD (Protected & rate-limited)
 router.post('/', protect, listingLimiter, upload.array('images', 5), createListing);
+router.put('/:id/sold', protect, markAsSold);
+router.get('/:id/potential-buyers', protect, getPotentialBuyers);
 router.put('/:id', protect, upload.array('images', 5), updateListing);
 router.delete('/:id', protect, deleteListing);
 
