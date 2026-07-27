@@ -1,0 +1,10 @@
+/* Profile Page Stylesheet Module */
+
+.profile-tab-active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.profile-avatar-shadow {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}

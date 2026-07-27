@@ -1,0 +1,9 @@
+/* Home Page Stylesheet Module */
+
+.home-radial-glow {
+  background: radial-gradient(circle at center, rgba(79, 70, 229, 0.08) 0%, transparent 65%);
+}
+
+.trending-card-glow {
+  background: radial-gradient(circle at 100% 100%, var(--primary) 0%, transparent 60%);
+}

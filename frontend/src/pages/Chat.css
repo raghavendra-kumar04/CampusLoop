@@ -1,0 +1,13 @@
+/* Chat Page Stylesheet Module */
+
+.chat-bubble-sender {
+  border-bottom-right-radius: 4px;
+}
+
+.chat-bubble-receiver {
+  border-bottom-left-radius: 4px;
+}
+
+.chat-room-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}

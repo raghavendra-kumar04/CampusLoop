@@ -1,0 +1,12 @@
+/* Create Listing Page Stylesheet Module */
+
+.form-image-preview-container {
+  border-style: dashed;
+  border-width: 2px;
+  border-color: var(--outline-variant);
+}
+
+.form-image-preview-container:hover {
+  border-color: var(--primary);
+  background: var(--surface-container-low);
+}
