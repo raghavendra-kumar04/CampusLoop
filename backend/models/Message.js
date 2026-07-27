@@ -24,6 +24,11 @@ const messageSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+    expires: 7 * 24 * 60 * 60 // 7 days in seconds (604800)
+  }
 }, {
   timestamps: true,
 });
