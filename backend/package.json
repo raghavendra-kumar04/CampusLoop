@@ -23,5 +23,11 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
-  }
+  },
+  "directories": {
+    "test": "tests"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
