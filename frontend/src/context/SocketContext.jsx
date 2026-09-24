@@ -13,7 +13,8 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     if (token && user) {
       // Connect to the socket server using proxy pathway
-      const newSocket = io({
+      const socketUrl = import.meta.env.PROD ? 'https://campusloop-phpl.onrender.com' : undefined;
+      const newSocket = io(socketUrl, {
         auth: { token },
       });
 
