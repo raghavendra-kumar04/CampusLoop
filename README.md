@@ -95,7 +95,7 @@ Make sure you have [Node.js](https://nodejs.org/) and [npm](https://npmjs.com/) 
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/CampusLoop.git
+   git clone https://github.com/raghavendra-kumar04/CampusLoop.git
    cd CampusLoop
    ```
 
