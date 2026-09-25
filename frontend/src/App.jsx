@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import { NotificationProvider } from './context/NotificationContext';
@@ -15,6 +16,9 @@ import CreateListing from './pages/CreateListing';
 import Auth from './pages/Auth';
 import Notifications from './pages/Notifications';
 import Review from './pages/Review';
+import AIAssistant from './components/AIAssistant';
+
+const Background3D = React.lazy(() => import('./components/Background3D'));
 
 // Protected Route Guard
 const ProtectedRoute = ({ children }) => {
@@ -38,10 +42,28 @@ const ProtectedRoute = ({ children }) => {
 function AppContent() {
   return (
     <Router>
-      <div className="min-h-screen bg-background text-on-background flex flex-col font-sans select-none pb-16 md:pb-0">
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3500,
+          style: {
+            background: '#1b1b24',
+            color: '#ffffff',
+            borderRadius: '0.85rem',
+            border: '1px solid rgba(199, 196, 216, 0.2)',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.25)',
+            fontSize: '14px',
+            fontFamily: 'Plus Jakarta Sans, sans-serif'
+          }
+        }}
+      />
+      <div className="min-h-screen bg-background text-on-background flex flex-col font-sans select-none pb-16 md:pb-0 relative">
+        <React.Suspense fallback={null}>
+          <Background3D />
+        </React.Suspense>
         <Navbar />
         
-        <main className="flex-1">
+        <main className="flex-1 relative z-10">
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Home />} />
@@ -98,6 +120,7 @@ function AppContent() {
         
         <Footer />
         <BottomNavbar />
+        <AIAssistant />
       </div>
     </Router>
   );

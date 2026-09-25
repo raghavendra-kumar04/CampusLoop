@@ -47,8 +47,9 @@ const Navbar = () => {
       <div className="flex justify-between items-center w-full px-margin-mobile md:px-lg max-w-container-max mx-auto h-16">
         {/* Brand Logo */}
         <div className="flex items-center gap-md">
-          <Link to="/" className="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim">
-            CampusLoop
+          <Link to="/" className="flex items-center gap-2 font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim hover:opacity-90 transition-opacity">
+            <img src="/logo.png" alt="CampusLoop Logo" className="w-8 h-8 md:w-9 md:h-9 object-contain shrink-0" />
+            <span>CampusLoop</span>
           </Link>
           {/* Desktop Nav Links */}
           <div className="hidden md:flex items-center gap-md ml-lg">

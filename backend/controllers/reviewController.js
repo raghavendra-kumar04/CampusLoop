@@ -41,6 +41,17 @@ const createReview = async (req, res) => {
       listing: listingId,
     });
 
+    // Recalculate and update seller's average rating and total ratingsCount
+    try {
+      const sellerReviews = await Review.find({ seller: sellerId });
+      const count = sellerReviews.length;
+      const sum = sellerReviews.reduce((acc, r) => acc + (r.rating || 0), 0);
+      const avg = count > 0 ? Number((sum / count).toFixed(1)) : 0;
+      await User.findByIdAndUpdate(sellerId, { rating: avg, ratingsCount: count });
+    } catch (ratingErr) {
+      console.error('Failed to update seller rating summary:', ratingErr);
+    }
+
     // Notify the seller that they were rated!
     try {
       const buyerUser = await User.findById(req.user.id);

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
-import RatingStars from '../components/RatingStars';
+import { isProfileComplete } from '../utils/profile';
 import ListingCard from '../components/ListingCard';
 import './ItemDetails.css';
 
@@ -18,6 +19,12 @@ const ItemDetails = () => {
   const [isSaved, setIsSaved] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [chatStarting, setChatStarting] = useState(false);
+
+  // AI Chat states
+  const [aiChatOpen, setAiChatOpen] = useState(false);
+  const [aiMessages, setAiMessages] = useState([]);
+  const [aiInput, setAiInput] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
 
   // Sold & Rating Workflow States
   const [potentialBuyers, setPotentialBuyers] = useState([]);
@@ -44,19 +51,44 @@ const ItemDetails = () => {
 
   const handleMarkAsSoldConfirm = async () => {
     if (!selectedBuyerId) {
-      alert('Please select a buyer.');
+      toast.error('Please select a buyer.');
       return;
     }
     setSubmittingSold(true);
     try {
-      const res = await axios.put(`/api/listings/${id}/sold`, { buyerId: selectedBuyerId });
+      await axios.put(`/api/listings/${id}/sold`, { buyerId: selectedBuyerId });
       setListing(prev => ({ ...prev, status: 'Sold', buyer: selectedBuyerId }));
       setShowSoldModal(false);
+      toast.success('Listing marked as sold!');
     } catch (err) {
       console.error('Error marking listing as sold:', err);
-      alert(err.response?.data?.message || 'Error occurred');
+      toast.error(err.response?.data?.message || 'Failed to mark as sold.');
     } finally {
       setSubmittingSold(false);
+    }
+  };
+
+  // AI Chat handler — sends message + listingId to backend; product context loaded server-side
+  const handleAIChat = async (e) => {
+    e.preventDefault();
+    if (!aiInput.trim() || aiLoading) return;
+
+    const userMessage = aiInput.trim();
+    setAiInput('');
+    setAiMessages(prev => [...prev, { role: 'user', text: userMessage }]);
+    setAiLoading(true);
+
+    try {
+      const res = await axios.post('/api/ai/product-chat', {
+        listingId: listing._id,
+        message: userMessage,
+      });
+      setAiMessages(prev => [...prev, { role: 'ai', text: res.data.message }]);
+    } catch (err) {
+      const errMsg = err.response?.data?.message || 'AI unavailable. Try again.';
+      setAiMessages(prev => [...prev, { role: 'ai', text: errMsg, isError: true }]);
+    } finally {
+      setAiLoading(false);
     }
   };
 
@@ -111,6 +143,11 @@ const ItemDetails = () => {
       navigate('/auth');
       return;
     }
+    if (!isProfileComplete(user)) {
+      toast.error('Please complete your profile details (Major, Graduation Year, and Bio) before contacting sellers or buying items.');
+      navigate(`/profile/${user._id}?edit=true`);
+      return;
+    }
     setChatStarting(true);
     try {
       const res = await axios.post('/api/chats/start', {
@@ -120,6 +157,7 @@ const ItemDetails = () => {
       navigate('/messages', { state: { activeConversationId: res.data._id } });
     } catch (err) {
       console.error('Error starting conversation:', err);
+      toast.error(err.response?.data?.message || 'Failed to start conversation');
     } finally {
       setChatStarting(false);
     }
@@ -129,10 +167,11 @@ const ItemDetails = () => {
     if (window.confirm("Are you sure you want to delete this listing?")) {
       try {
         await axios.delete(`/api/listings/${id}`);
+        toast.success('Listing deleted successfully');
         navigate(`/profile/${user._id}`);
       } catch (err) {
         console.error('Error deleting listing:', err);
-        alert(err.response?.data?.message || 'Failed to delete listing.');
+        toast.error(err.response?.data?.message || 'Failed to delete listing.');
       }
     }
   };
@@ -407,13 +446,28 @@ const ItemDetails = () => {
                 </button>
               )}
               <button
-                onClick={() => navigator.clipboard.writeText(window.location.href).then(() => alert('Link copied!'))}
+                onClick={() => navigator.clipboard.writeText(window.location.href).then(() => toast.success('Link copied to clipboard!'))}
                 className="flex-1 py-3 rounded-xl border border-outline text-on-surface font-label-md text-label-md flex items-center justify-center gap-sm hover:bg-surface-container-low transition-colors"
               >
                 <span className="material-symbols-outlined">share</span>
                 Share
               </button>
             </div>
+
+            {/* Ask AI Button */}
+            {!isOwner && (
+              <button
+                onClick={() => {
+                  if (!user) { toast.error('Please sign in to use AI chat.'); return; }
+                  setAiMessages([{ role: 'ai', text: `Hi! I'm CampusLoop AI. Ask me anything about "${listing.title}" — pricing, condition, what to inspect, or whether it's worth buying!` }]);
+                  setAiChatOpen(true);
+                }}
+                className="w-full py-3 rounded-xl border border-primary/30 bg-primary/5 hover:bg-primary/10 text-primary font-label-md text-label-md flex items-center justify-center gap-sm transition-all"
+              >
+                <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+                Ask AI about this item
+              </button>
+            )}
           </div>
 
         </div>
@@ -458,6 +512,17 @@ const ItemDetails = () => {
             >
               <span className="material-symbols-outlined">chat</span>
               {listing.status === 'Sold' ? 'Sold Out' : (chatStarting ? 'Opening...' : 'Chat with Seller')}
+            </button>
+            <button
+              onClick={() => {
+                if (!user) { toast.error('Please sign in to use AI chat.'); return; }
+                setAiMessages([{ role: 'ai', text: `Hi! I'm CampusLoop AI. Ask me anything about "${listing.title}" — pricing, condition, what to inspect, or whether it's worth buying!` }]);
+                setAiChatOpen(true);
+              }}
+              className="w-14 h-14 shrink-0 rounded-xl border border-primary/30 bg-primary/5 text-primary flex items-center justify-center active:scale-95 transition-all"
+              title="Ask AI about this item"
+            >
+              <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
             </button>
           </>
         ) : (
@@ -590,6 +655,97 @@ const ItemDetails = () => {
               </button>
             </div>
             
+          </div>
+        </div>
+      )}
+
+      {/* AI Product Chat Modal */}
+      {aiChatOpen && (
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-lg bg-surface-container-lowest border border-outline-variant/20 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+
+            {/* Header */}
+            <div className="px-6 py-4 bg-primary/5 border-b border-outline-variant/10 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-on-surface">Ask AI about this item</h3>
+                  <p className="text-xs text-on-surface-variant truncate max-w-[220px]">{listing.title}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setAiChatOpen(false)}
+                className="p-1.5 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            {/* Quick suggestion chips */}
+            {aiMessages.length <= 1 && (
+              <div className="px-4 pt-3 pb-1 flex flex-wrap gap-2 border-b border-outline-variant/10 shrink-0">
+                {['Is this price fair?', 'What should I check before buying?', 'Is this a good deal?', 'What does this condition mean?'].map(q => (
+                  <button
+                    key={q}
+                    onClick={() => {
+                      setAiInput(q);
+                      setTimeout(() => document.getElementById('ai-input-field')?.focus(), 50);
+                    }}
+                    className="text-xs px-3 py-1.5 rounded-full bg-surface-container hover:bg-primary/10 text-on-surface-variant hover:text-primary transition-colors border border-outline-variant/10"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+              {aiMessages.map((msg, i) => (
+                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
+                    msg.role === 'user'
+                      ? 'bg-primary text-white rounded-br-none'
+                      : msg.isError
+                        ? 'bg-error-container/30 text-error rounded-bl-none'
+                        : 'bg-surface-container-high text-on-surface rounded-bl-none'
+                  }`}>
+                    {msg.text}
+                  </div>
+                </div>
+              ))}
+              {aiLoading && (
+                <div className="flex justify-start">
+                  <div className="px-4 py-3 rounded-2xl rounded-bl-none bg-surface-container-high text-on-surface-variant text-sm flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[16px] animate-spin">sync</span>
+                    Thinking...
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Input */}
+            <form onSubmit={handleAIChat} className="p-4 border-t border-outline-variant/10 flex items-center gap-2 shrink-0">
+              <input
+                id="ai-input-field"
+                type="text"
+                value={aiInput}
+                onChange={e => setAiInput(e.target.value)}
+                placeholder="Ask anything about this item..."
+                maxLength={500}
+                disabled={aiLoading}
+                className="flex-1 bg-surface-container text-on-surface text-sm px-4 py-2.5 rounded-xl outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
+              />
+              <button
+                type="submit"
+                disabled={!aiInput.trim() || aiLoading}
+                className="p-2.5 rounded-xl bg-primary text-white disabled:opacity-40 transition-opacity"
+              >
+                <span className="material-symbols-outlined text-[18px]">send</span>
+              </button>
+            </form>
           </div>
         </div>
       )}

@@ -21,12 +21,12 @@ const listingSchema = new mongoose.Schema({
   category: {
     type: String,
     required: [true, 'Please specify a category'],
-    enum: ['Electronics', 'Textbooks', 'Furniture', 'Dorm Gear', 'Clothing', 'Other'],
+    enum: ['Electronics', 'Textbooks', 'Furniture', 'Dorm Gear', 'Clothing', 'Tickets', 'Other'],
   },
   condition: {
     type: String,
     required: [true, 'Please specify the item condition'],
-    enum: ['New', 'Mint', 'Used', 'Boxed', 'Good', 'Fair'],
+    enum: ['New', 'Like New', 'Mint', 'Used', 'Boxed', 'Good', 'Fair'],
   },
   listingType: {
     type: String,

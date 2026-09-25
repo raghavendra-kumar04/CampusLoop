@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 
 const ListingCard = ({ listing, onWishlistToggle, onDelete, widthClass = '' }) => {
@@ -58,6 +59,7 @@ const ListingCard = ({ listing, onWishlistToggle, onDelete, widthClass = '' }) =
       setLoading(true);
       try {
         await axios.delete(`/api/listings/${listing._id}`);
+        toast.success('Listing deleted');
         if (onDelete) {
           onDelete(listing._id);
         } else {
@@ -65,7 +67,7 @@ const ListingCard = ({ listing, onWishlistToggle, onDelete, widthClass = '' }) =
         }
       } catch (err) {
         console.error('Error deleting listing:', err);
-        alert(err.response?.data?.message || 'Failed to delete listing.');
+        toast.error(err.response?.data?.message || 'Failed to delete listing.');
       } finally {
         setLoading(false);
       }

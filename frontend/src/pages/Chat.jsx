@@ -349,14 +349,14 @@ const Chat = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-1">
+              {/* <div className="flex items-center gap-1">
                 <button className="p-2 hover:bg-surface-container-high/50 rounded-full transition-all">
                   <span className="material-symbols-outlined text-on-surface-variant">call</span>
                 </button>
                 <button className="p-2 hover:bg-surface-container-high/50 rounded-full transition-all">
                   <span className="material-symbols-outlined text-on-surface-variant">info</span>
                 </button>
-              </div>
+              </div> */}
             </header>
 
             {/* Messages Area */}
@@ -488,7 +488,7 @@ const Chat = () => {
             </div>
             <h2 className="font-headline-md text-headline-md text-on-surface mb-1 truncate">{activeConversation.listing.title}</h2>
             <span className="font-headline-md text-headline-md text-emerald-600 block mb-3">
-              {activeConversation.listing.price === 0 ? 'Free' : `$${activeConversation.listing.price}`}
+              {activeConversation.listing.price === 0 ? 'Free' : `₹${activeConversation.listing.price}`}
             </span>
             
             <div className="flex gap-2 mb-6">

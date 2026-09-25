@@ -1,6 +1,7 @@
 const Conversation = require('../models/Conversation');
 const Message = require('../models/Message');
 const Listing = require('../models/Listing');
+const User = require('../models/User');
 
 // @desc    Start or retrieve a conversation for a listing
 // @route   POST /api/chats/start
@@ -16,6 +17,22 @@ const startConversation = async (req, res) => {
 
     if (senderId === receiverId) {
       return res.status(400).json({ message: 'You cannot start a chat with yourself' });
+    }
+
+    // Enforce profile completeness (Major, Graduation Year, Bio) before buying / contacting sellers
+    const senderUser = await User.findById(senderId);
+    if (
+      !senderUser ||
+      !senderUser.major ||
+      !senderUser.major.trim() ||
+      !senderUser.graduationYear ||
+      !senderUser.bio ||
+      !senderUser.bio.trim()
+    ) {
+      return res.status(403).json({
+        message: 'Profile Incomplete: You must complete your Major, Graduation Year, and Bio in your profile before contacting sellers or buying items.',
+        code: 'PROFILE_INCOMPLETE',
+      });
     }
 
     // Verify listing exists

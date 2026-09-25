@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 
 const Review = () => {
@@ -33,8 +34,8 @@ const Review = () => {
           setListing(lRes.data);
         }
         // Fetch seller details
-        const sRes = await axios.get(`/api/users/profile/${sellerId}`);
-        setSeller(sRes.data);
+        const sRes = await axios.get(`/api/users/${sellerId}`);
+        setSeller(sRes.data.user || sRes.data);
       } catch (err) {
         console.error('Error fetching transaction info:', err);
         setErrorMsg('Failed to locate transaction or seller information.');
@@ -66,7 +67,7 @@ const Review = () => {
         reviewText: reviewText.trim(),
         listingId
       });
-      alert('Thank you! Your feedback has been submitted.');
+      toast.success('Thank you! Your feedback has been submitted.');
       navigate(`/profile/${sellerId}`);
     } catch (err) {
       console.error('Error submitting review:', err);
@@ -121,7 +122,7 @@ const Review = () => {
                 {listing.listingType === 'Donate' ? 'Free' : `₹${listing.price}`}
               </p>
               <p className="text-caption text-outline font-caption mt-0.5 truncate text-[11px]">
-                Sold by {seller?.name}
+                Sold by {seller?.name || seller?.user?.name || listing?.seller?.name || 'Seller'}
               </p>
             </div>
           </div>

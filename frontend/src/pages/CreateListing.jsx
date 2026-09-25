@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import { isProfileComplete } from '../utils/profile';
 
 const CreateListing = () => {
   const navigate = useNavigate();
@@ -20,14 +22,14 @@ const CreateListing = () => {
     category: 'Textbooks',
     condition: 'Like New',
     listingType: 'Sell',
-    location: 'North Campus Library'
+    location: 'Campus Library'
   });
 
   const [files, setFiles] = useState([]);
   const [previews, setPreviews] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState({ show: false, message: '' });
+  const [fileToast, setFileToast] = useState({ show: false, message: '' });
 
   // If not logged in, redirect to auth
   useEffect(() => {
@@ -88,8 +90,8 @@ const CreateListing = () => {
     // Check if any file is larger than 2MB
     const oversizedFile = selectedFiles.find(file => file.size > 2 * 1024 * 1024);
     if (oversizedFile) {
-      setToast({ show: true, message: 'Please upload images less than 2MB' });
-      setTimeout(() => setToast({ show: false, message: '' }), 4000);
+      setFileToast({ show: true, message: 'Please upload images less than 2MB' });
+      setTimeout(() => setFileToast({ show: false, message: '' }), 4000);
       return;
     }
 
@@ -120,6 +122,11 @@ const CreateListing = () => {
   };
 
   const handleNext = () => {
+    if (!isProfileComplete(user)) {
+      toast.error('Please complete your profile details (Major, Graduation Year, and Bio) before listing products for sale.');
+      navigate(`/profile/${user?._id}?edit=true`);
+      return;
+    }
     if (step === 1) {
       if (files.length === 0) {
         setError('Please upload at least one image of your item.');
@@ -147,6 +154,12 @@ const CreateListing = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!isProfileComplete(user)) {
+      toast.error('Please complete your profile details (Major, Graduation Year, and Bio) before listing products for sale.');
+      navigate(`/profile/${user?._id}?edit=true`);
+      return;
+    }
 
     const { title, description, price, category, condition, listingType, location } = formData;
 
@@ -186,16 +199,19 @@ const CreateListing = () => {
             'Content-Type': 'multipart/form-data',
           },
         });
+        toast.success('Listing updated successfully!');
         navigate(`/item/${res.data._id}`);
       } else {
-        const res = await axios.post('/api/listings', data, {
+        await axios.post('/api/listings', data, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
         });
-        navigate(`/item/${res.data._id}`);
+        toast.success('Listing published successfully! Start another listing or check your profile.');
+        navigate('/sell');
       }
     } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to save listing. Please try again.');
       setError(err.response?.data?.message || 'Failed to save listing. Please try again.');
     } finally {
       setLoading(false);
@@ -205,11 +221,10 @@ const CreateListing = () => {
   const categories = ['Textbooks', 'Electronics', 'Furniture', 'Clothing', 'Tickets', 'Other'];
   const conditions = ['New', 'Like New', 'Good', 'Fair'];
   const locations = [
-    'North Campus Library',
-    'Student Union Center',
-    'Dorm Village Plaza',
-    'Main Engineering Hub',
-    'West Side Sports Complex'
+    'Campus Library',
+    'Administrative Block',
+    'Canteen',
+    'Near Volley Ball Court'
   ];
 
   return (
@@ -224,6 +239,25 @@ const CreateListing = () => {
             </h1>
             <p className="font-body-md text-body-md text-on-surface-variant mt-2">Reach thousands of students on your campus in minutes.</p>
           </header>
+
+          {!isProfileComplete(user) && (
+            <div className="p-4 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-900 dark:text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-amber-600 dark:text-amber-400 text-2xl">warning</span>
+                <div>
+                  <h4 className="font-bold text-sm">Profile Details Incomplete</h4>
+                  <p className="text-xs opacity-90">You must fill out your Major, Graduation Year, and Bio before listing products for sale.</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate(`/profile/${user?._id}?edit=true`)}
+                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shrink-0 transition-colors"
+              >
+                Complete Profile
+              </button>
+            </div>
+          )}
 
           {/* Stepper Progress */}
           <div className="flex items-center justify-between w-full max-w-md">
@@ -550,11 +584,11 @@ const CreateListing = () => {
         </div>
 
       </div>
-      {/* Floating alert toast */}
-      {toast.show && (
+      {/* Floating alert toast (file upload errors only) */}
+      {fileToast.show && (
         <div className="fixed bottom-6 right-6 z-50 animate-slide-in flex items-center gap-xs bg-error-container text-error px-4 py-2.5 rounded-2xl shadow-xl border border-error-container/20">
           <span className="material-symbols-outlined text-[20px]">error</span>
-          <span className="font-semibold text-xs">{toast.message}</span>
+          <span className="font-semibold text-xs">{fileToast.message}</span>
         </div>
       )}
     </main>

@@ -7,16 +7,16 @@ const Notification = require('../models/Notification');
 // @access  Public
 const getListings = async (req, res) => {
   try {
-    const { 
-      search, 
-      category, 
-      minPrice, 
-      maxPrice, 
-      condition, 
-      listingType, 
-      status, 
+    const {
+      search,
+      category,
+      minPrice,
+      maxPrice,
+      condition,
+      listingType,
+      status,
       seller,
-      sortBy 
+      sortBy
     } = req.query;
 
     const query = {};
@@ -122,6 +122,22 @@ const createListing = async (req, res) => {
 
     if (!title || !description || price === undefined || !category || !condition || !location) {
       return res.status(400).json({ message: 'Please add all required listing fields' });
+    }
+
+    // Enforce profile completeness (Major, Graduation Year, Bio) before selling
+    const sellerUser = await User.findById(req.user.id);
+    if (
+      !sellerUser ||
+      !sellerUser.major ||
+      !sellerUser.major.trim() ||
+      !sellerUser.graduationYear ||
+      !sellerUser.bio ||
+      !sellerUser.bio.trim()
+    ) {
+      return res.status(403).json({
+        message: 'Profile Incomplete: You must complete your Major, Graduation Year, and Bio in your profile before listing products for sale.',
+        code: 'PROFILE_INCOMPLETE',
+      });
     }
 
     // Handle files upload
@@ -328,9 +344,9 @@ const toggleSaveListing = async (req, res) => {
       }
     }
 
-    res.json({ 
-      saved: !isSaved, 
-      message: isSaved ? 'Removed from saved items' : 'Saved to wishlist successfully' 
+    res.json({
+      saved: !isSaved,
+      message: isSaved ? 'Removed from saved items' : 'Saved to wishlist successfully'
     });
   } catch (error) {
     console.error('ToggleSaveListing Error:', error);

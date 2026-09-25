@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { isProfileComplete } from '../utils/profile';
 import RatingStars from '../components/RatingStars';
 import ListingCard from '../components/ListingCard';
 import Button from '../components/ui/Button';
@@ -10,6 +11,7 @@ import './Profile.css';
 const Profile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, updateProfile, updateAvatar } = useAuth();
 
   const [profileUser, setProfileUser] = useState(null);
@@ -72,7 +74,10 @@ const Profile = () => {
   useEffect(() => {
     fetchProfileData();
     setActiveTab('listings');
-  }, [id, user]);
+    if (location.search.includes('edit=true')) {
+      setIsEditing(true);
+    }
+  }, [id, user, location.search]);
 
   const handleEditChange = (e) => {
     setEditForm({ ...editForm, [e.target.name]: e.target.value });
@@ -80,12 +85,31 @@ const Profile = () => {
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
+    if (!editForm.name || !editForm.name.trim()) {
+      toast.error('Please provide your full name.');
+      return;
+    }
+    if (!editForm.major || !editForm.major.trim()) {
+      toast.error('Please specify your Major Study.');
+      return;
+    }
+    if (!editForm.graduationYear || Number(editForm.graduationYear) <= 0) {
+      toast.error('Please specify a valid Graduation Year.');
+      return;
+    }
+    if (!editForm.bio || !editForm.bio.trim()) {
+      toast.error('Please write a brief Biography description.');
+      return;
+    }
+
     try {
       const updated = await updateProfile(editForm);
       setProfileUser(updated);
       setIsEditing(false);
+      toast.success('Profile completed & updated successfully!');
     } catch (err) {
       console.error('Error updating profile:', err);
+      toast.error(err.message || 'Failed to update profile.');
     }
   };
 
@@ -184,6 +208,26 @@ const Profile = () => {
   return (
     <main className="max-w-4xl mx-auto px-margin-mobile md:px-lg py-md md:py-lg mb-16 md:mb-0">
       
+      {isOwnProfile && !isProfileComplete(profileUser || user) && (
+        <div className="mb-md p-md rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-900 dark:text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-sm shadow-sm">
+          <div className="flex items-center gap-sm">
+            <span className="material-symbols-outlined text-amber-600 dark:text-amber-400 text-3xl">info</span>
+            <div>
+              <h3 className="font-bold text-sm">Action Required: Complete Your Student Profile</h3>
+              <p className="text-xs opacity-90">Fill out your Major, Graduation Year, and Bio to be allowed to buy or sell products on CampusLoop.</p>
+            </div>
+          </div>
+          {!isEditing && (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shrink-0 transition-colors"
+            >
+              Complete Profile Now
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Profile Header */}
       <div className="bg-surface-container-lowest border border-outline-variant/10 rounded-3xl p-md md:p-lg shadow-sm relative overflow-hidden mb-lg">
         

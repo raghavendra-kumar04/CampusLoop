@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
-import Button from '../components/ui/Button';
+import GetStartedButton from '../components/GetStartedButton';
 import './Auth.css';
 
 const Auth = () => {
@@ -74,11 +75,14 @@ const Auth = () => {
     try {
       if (isLogin) {
         await login(email, password);
+        toast.success('Welcome back!');
       } else {
         await register(name, email, password);
+        toast.success('Student account created successfully!');
       }
       navigate('/');
     } catch (err) {
+      toast.error(err.message || 'Authentication failed. Please check your credentials.');
       setError(err.message || 'Authentication failed. Please check your credentials.');
     } finally {
       setLoading(false);
@@ -176,23 +180,17 @@ const Auth = () => {
             </div>
           )}
 
-          <Button
-            type="submit"
-            disabled={loading}
-            className="w-full mt-md py-3 text-sm"
-          >
-            {loading ? (
-              <span className="flex items-center gap-xs">
-                <span className="material-symbols-outlined text-[20px] animate-spin">sync</span>
-                Please wait...
-              </span>
-            ) : (
-              isLogin ? 'Sign In' : 'Register'
-            )}
-          </Button>
+          <div className="mt-2 mb-0 w-full">
+            <GetStartedButton
+              type="submit"
+              disabled={loading}
+              loading={loading}
+              label={isLogin ? 'SIGN IN' : 'REGISTER'}
+            />
+          </div>
         </form>
 
-        <div className="mt-md text-center text-xs relative z-10 border-t border-outline-variant/10 pt-md">
+        <div className="mt-1 text-center text-xs relative z-10 border-t border-outline-variant/10 pt-3">
           <span className="text-on-surface-variant">
             {isLogin ? "Don't have an account? " : 'Already registered? '}
           </span>

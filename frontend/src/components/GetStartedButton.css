@@ -1,0 +1,295 @@
+@font-face {
+  font-family: "Geist Mono";
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+  src: url(data:font/woff2;base64,d09GMgABAAAAAAbQAA8AAAAADKQAAAZ5AAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGhYbHhwoBmA/U1RBVEQAPBEICo4UinELOgABNgIkAzwEIAWEOAcgG8IJEdWkHsg0UhbO38/vm/v3zmbzYCdbJFaP8bMiWwBwdHwrvytzoGjrKhTFB/KsfykWYHfGtWYmSaUkA6FcojML8rQ+7lfziZN4ozr8/Uz3AQeeOrAp/heLV6vsiwQ60Cg/yjI8DOIDsqY7ltc1mGH6sR0EwIIaECCJjYkKgMI4GramN+3YFEILsdfn+FGyTGQIT0Dqko9zdhQHygiknS5GieTABcVKkgO9NdKiAJbQhJQhhfAFuQfiD6O4fuM9LRLbuwwNMQsb4/f8rIDfRyUmgf+29C4gh4lloEgJbbA1BABgWKaYl+5ot3bzd0Npd7qDpIAyDhCHEBM3YNgwqoJE078AyMGM5nAITpcQsKRAkiA2go4xPwmbf9//4D5ZCrQXk+xiYsXENskrgM9fziF8ThGTAxRbQhk2eMBI8sIgM8WcAKYNySDg8gcMWzxxkDZZSBgdZgwbpsBw0eGR4cWhIaJAVVvGgDlR00OIi51Uhl0zqOJt8ysF+21Z0ynGw31YJPuXRAVcp4lMeHXCVKp90XTrgeXzKicdcV520bex3HD7lJeO2zSabcpz55nltbGpYIkAFmyvNr7KodIaXVMRCJabfJPYcsUbPMlgqY7a1VjCxqQgllWTMdyWS459FBov9dpKa3GKy1I2tdTbR2Qs0qgWWyuS8KiY6OTa5ddg2qdpGSvpwu8HEKU+c48NmHiSqhKHsVs5wOrFoCQnCW5eNcJx4XCWu33m1AuKb3ZKOekwHHrkJl1hocuw6kTbsv+3EHeLN2lQ0EGq76JhzO3bpwsHcOU5QoVD35Tib4XSWU2mVSWqdvWjB1G6RRovG4iv95/vzi+dF5mHyz6eZn093Pzz68Ogke8TmYSM2I//scXdvPTt/zs59s5YGNmRmL9z7ob5pY8/YucrzXIRyOjhX9FxVNhSutDvDJLsdytlMqt55I5F03kg1MC2b1y8c8ojnsnXVFTbOoxhva1Vk4c9oo5qaZjd6RPMS23eimb/UMsH4LyYS/gsTsZaGqprkpiMHD206mqxBM3+X7EFDVQMxQqKXf1B14IfSpqomB6Szg0mu6sbaRMWNZGO0qt1Eds+i3eJ5Qa7ObWW9ivHWVkWW8ziMYatigKCeVP7W7BQ8WfiyrjamBsXTtVP2/VlL83TbX/umtoEln5JPyQfkU/Ipibmz6W67dYTwU2JBY6w5HGPbWt+n31+/cQKbv2iMjrOf5niaZ4ixz0uuoJenb3x+gMSMyDnHlIM033cxJrkY6+Ppg1POOeDj2+Wn7p+l+Xb5qQfnIJvNJGvsN9IZ+41kLcMka5Ejk4bramKknXVJs+3t0nHWbUcWNwD4wGVZF9r5d/yDWlsLRdmaBzX+/avadtXX+TzeOn/9LmQze1jXHvZyz5rHULhKlaEloz7lHx3gPxraPNyhlwW98us2ShC0ick5b9CzX5Tc26W+UdJ3JMJ5XW7OGzkCw2xfwkEPCWm3SK+NMjKj3r8iW1osqlVUL/bOb1RLPUaLqbZH6/X12i1dQbfIXubzlht8nMtS9EOwgJ5Xv6TPKo1YzI7qISWm7fqSnEJ+uQuy2SMb9m16i36rjeuKRrmutrfotzZt2Afis5z39TPzXj/js1y3NTV5TwB96X+H/z2Xv7d2t233bfeN1533bf+Vl533Tf+fV/20Xn/c+d9y4fj3V+N3z12/jf+89n/8+Nf79ff3/23f/t/6b/v5e2/4/+b) format("woff2");
+}
+
+.threeui-get-started-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+  padding: 8px 0;
+}
+
+.threeui-cta {
+  --w: calc(706 * var(--u, 0.5px));
+  --h: calc(232 * var(--u, 0.5px));
+  position: relative;
+  width: var(--w);
+  height: var(--h);
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  border-radius: calc(116 * var(--u, 0.5px));
+  cursor: pointer;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  --m: calc(48 * var(--u, 0.5px));
+  isolation: isolate;
+  transition: transform 0.18s cubic-bezier(.16, .84, .3, 1);
+}
+
+.threeui-cta {
+  --bg: transparent;
+  --ink: #0f172a;
+  /* high contrast deep indigo-slate text visible clearly when un-hovered */
+  --ink-hover: #3525cd;
+  --chev: #4f46e5;
+  --chev-hover: #3525cd;
+  --accent: 79, 70, 229;
+  /* CampusLoop indigo RGB (4f46e5) */
+}
+
+.threeui-cta::after {
+  content: "";
+  position: absolute;
+  inset: calc(-27 * var(--u, 0.5px));
+  border-radius: calc(143 * var(--u, 0.5px));
+}
+
+.threeui-cta::before {
+  content: "";
+  position: absolute;
+  inset: calc(-26 * var(--u, 0.5px));
+  border-radius: calc(142 * var(--u, 0.5px));
+  z-index: -2;
+  pointer-events: none;
+  clip-path: inset(0 calc(-400 * var(--u, 0.5px)) calc(-700 * var(--u, 0.5px)) calc(-400 * var(--u, 0.5px)));
+  box-shadow: none;
+  transition: none;
+}
+
+.threeui-cta:focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: 8px;
+}
+
+.threeui-cta:active {
+  transform: translateY(calc(2 * var(--u, 0.5px))) scale(0.992);
+}
+
+.threeui-cta:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Violet light thrown onto surrounding card on hover */
+.threeui-halo {
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  left: calc(430 * var(--u, 0.5px));
+  top: calc(-44 * var(--u, 0.5px));
+  width: calc(320 * var(--u, 0.5px));
+  height: calc(320 * var(--u, 0.5px));
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--accent), 0.55) 0%, rgba(var(--accent), 0.2) 35%, rgba(var(--accent), 0) 66%);
+  opacity: 0;
+  transition: opacity 0.42s cubic-bezier(.6, 0, .35, 1);
+}
+
+.threeui-face {
+  position: absolute;
+  inset: calc(-1 * var(--m));
+  pointer-events: none;
+}
+
+.threeui-face canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Label styling */
+.threeui-label {
+  position: absolute;
+  left: calc(134 * var(--u, 0.5px));
+  top: 50%;
+  transform: translateY(-50%);
+  font: 700 calc(52 * var(--u, 0.5px))/1 "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: calc(4 * var(--u, 0.5px));
+  white-space: pre;
+  color: var(--ink);
+  -webkit-text-stroke: calc(0.6 * var(--u, 0.5px)) currentColor;
+  pointer-events: none;
+  user-select: none;
+  transition: color 0.3s cubic-bezier(.45, 0, .2, 1) 0.23s;
+  display: flex;
+  align-items: center;
+  gap: calc(12 * var(--u, 0.5px));
+}
+
+.threeui-knob {
+  position: absolute;
+  left: calc(502 * var(--u, 0.5px));
+  top: calc(28 * var(--u, 0.5px));
+  width: calc(176 * var(--u, 0.5px));
+  height: calc(176 * var(--u, 0.5px));
+  border-radius: 50%;
+  overflow: hidden;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(circle, #000 99%, transparent 100%);
+  mask-image: radial-gradient(circle, #000 99%, transparent 100%);
+}
+
+.threeui-knob>* {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+
+.threeui-glow {
+  width: 0;
+  height: 0;
+  inset: auto;
+  opacity: 0;
+  transition: opacity 0.42s cubic-bezier(.6, 0, .35, 1);
+}
+
+.threeui-pen {
+  overflow: visible;
+}
+
+.threeui-pen path {
+  fill: none;
+  stroke: var(--chev);
+  stroke-width: 4.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke 0.15s cubic-bezier(.45, 0, .2, 1) 0.15s;
+}
+
+.threeui-pen-move {
+  transform: translate(calc(-6 * var(--u, 0.5px)), 0) rotate(0deg);
+  transform-origin: 68px 108px;
+  transition: transform 0.5s cubic-bezier(.45, 0, .2, 1) 0.05s;
+}
+
+.threeui-pen-wiggle {
+  transform-origin: 68px 108px;
+}
+
+.threeui-scribble {
+  stroke: var(--chev-hover);
+  stroke-dasharray: 36;
+  stroke-dashoffset: 36;
+  transition: stroke-dashoffset 0.45s cubic-bezier(.45, 0, .2, 1);
+}
+
+@keyframes threeui-pen-write {
+  0% {
+    transform: rotate(-4deg) translate(0, 0);
+  }
+
+  50% {
+    transform: rotate(3deg) translate(0, calc(-1.5 * var(--u, 0.5px)));
+  }
+
+  100% {
+    transform: rotate(-4deg) translate(0, 0);
+  }
+}
+
+/* Hover & focus states */
+.threeui-cta:hover::before,
+.threeui-cta:focus-visible::before,
+.threeui-cta.is-hover::before {
+  box-shadow: none;
+  transition: none;
+}
+
+.threeui-cta:hover .threeui-halo,
+.threeui-cta:focus-visible .threeui-halo,
+.threeui-cta.is-hover .threeui-halo {
+  opacity: 1;
+  transition: opacity 0.4s cubic-bezier(.5, 0, .3, 1) 0.28s;
+}
+
+.threeui-cta:hover .threeui-label,
+.threeui-cta:focus-visible .threeui-label,
+.threeui-cta.is-hover .threeui-label {
+  color: var(--ink-hover);
+  transition: color 0.38s cubic-bezier(.55, 0, .25, 1) 0.19s;
+}
+
+.threeui-cta:hover .threeui-glow,
+.threeui-cta:focus-visible .threeui-glow,
+.threeui-cta.is-hover .threeui-glow {
+  opacity: 1;
+  transition: opacity 0.32s cubic-bezier(.5, 0, .3, 1) 0.26s;
+}
+
+.threeui-cta:hover .threeui-pen path,
+.threeui-cta:focus-visible .threeui-pen path,
+.threeui-cta.is-hover .threeui-pen path {
+  stroke: var(--chev-hover);
+  transition: stroke 0.34s cubic-bezier(.45, 0, .2, 1) 0.1s;
+}
+
+.threeui-cta:hover .threeui-pen-move,
+.threeui-cta:focus-visible .threeui-pen-move,
+.threeui-cta.is-hover .threeui-pen-move {
+  transform: translate(calc(20 * var(--u, 0.5px)), calc(-1 * var(--u, 0.5px))) rotate(-6deg);
+  transition: transform 0.9s cubic-bezier(.5, 0, .3, 1) 0.22s;
+}
+
+.threeui-cta:hover .threeui-scribble,
+.threeui-cta:focus-visible .threeui-scribble,
+.threeui-cta.is-hover .threeui-scribble {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.9s cubic-bezier(.5, 0, .3, 1) 0.22s;
+}
+
+.threeui-cta:hover .threeui-pen-wiggle,
+.threeui-cta:focus-visible .threeui-pen-wiggle,
+.threeui-cta.is-hover .threeui-pen-wiggle {
+  animation: threeui-pen-write 1.1s ease-in-out 1.1s infinite;
+}
+
+/* Fallback styling when WebGL 2 is unavailable */
+.threeui-cta.no-gl .threeui-face {
+  background: linear-gradient(135deg, #3525cd 0%, #4f46e5 60%, #10b981 100%);
+  border: calc(2.5 * var(--u, 0.5px)) solid #4f46e5;
+  border-radius: calc(116 * var(--u, 0.5px));
+}
+
+.threeui-knob-fallback {
+  display: none;
+}
+
+.threeui-cta.no-gl .threeui-knob-fallback {
+  display: block;
+  position: absolute;
+  left: calc(502 * var(--u, 0.5px));
+  top: calc(28 * var(--u, 0.5px));
+  width: calc(176 * var(--u, 0.5px));
+  height: calc(176 * var(--u, 0.5px));
+  border-radius: 50%;
+  background: radial-gradient(circle at 42% 30%, #ffffff 0%, #a5b4fc 28%, #4f46e5 70%, #1b1b24 100%);
+  box-shadow: inset 0 calc(4 * var(--u, 0.5px)) calc(10 * var(--u, 0.5px)) rgba(0, 0, 0, 0.35);
+  transition: background 0.4s;
+}
+
+.threeui-cta.no-gl:hover .threeui-knob-fallback {
+  background: radial-gradient(circle at 50% 40%, #1e1b4b 0%, #3525cd 45%, #10b981 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .threeui-cta,
+  .threeui-cta *,
+  .threeui-cta::before {
+    transition-duration: 0.01s !important;
+    transition-delay: 0s !important;
+  }
+}
