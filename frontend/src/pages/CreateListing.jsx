@@ -202,13 +202,17 @@ const CreateListing = () => {
         toast.success('Listing updated successfully!');
         navigate(`/item/${res.data._id}`);
       } else {
-        await axios.post('/api/listings', data, {
+        const res = await axios.post('/api/listings', data, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
         });
-        toast.success('Listing published successfully! Start another listing or check your profile.');
-        navigate('/sell');
+        toast.success('Listing published successfully!');
+        if (res.data?._id) {
+          navigate(`/item/${res.data._id}`);
+        } else {
+          navigate('/marketplace');
+        }
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to save listing. Please try again.');
