@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
+import { motion, useMotionValue, animate } from 'framer-motion';
 import axios from 'axios';
 
 function AnimatedCounter({ value, duration = 2 }) {
   const count = useMotionValue(0);
-  const rounded = useTransform(count, (latest) => Math.round(latest).toLocaleString());
   const [displayVal, setDisplayVal] = useState('0');
 
   useEffect(() => {

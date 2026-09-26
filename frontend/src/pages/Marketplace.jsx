@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { CardSkeleton } from '../components/ui/Skeleton';
+import Checkbox from '../components/ui/Checkbox';
+import Dropdown from '../components/ui/Dropdown';
 import ListingCard from '../components/ListingCard';
 import './Marketplace.css';
 
 const Marketplace = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
 
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -145,6 +146,7 @@ const Marketplace = () => {
 
   const categoriesList = ['Electronics', 'Textbooks', 'Furniture', 'Dorm Gear', 'Clothing', 'Other'];
   const conditionsList = ['New', 'Mint', 'Used', 'Boxed', 'Good', 'Fair'];
+  const sortOptions = ['Most Recent', 'Price: Low to High', 'Price: High to Low'];
 
   return (
     <main className="max-w-container-max mx-auto px-margin-mobile md:px-lg py-md md:py-lg min-h-screen">
@@ -159,17 +161,14 @@ const Marketplace = () => {
               <h3 className="font-label-md text-label-md text-on-surface-variant mb-md uppercase tracking-wider">Category</h3>
               <div className="space-y-sm">
                 {categoriesList.map(cat => (
-                  <label key={cat} className="flex items-center gap-sm cursor-pointer group">
-                    <input
-                      type="checkbox"
+                  <div key={cat} className="group">
+                    <Checkbox
                       checked={selectedCategories.includes(cat)}
                       onChange={() => handleCategoryCheckbox(cat)}
-                      className="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary bg-surface-container-low"
+                      label={<span className="font-body-md text-on-surface group-hover:text-primary transition-colors">{cat}</span>}
+                      size="20px"
                     />
-                    <span className="font-body-md text-on-surface group-hover:text-primary transition-colors">
-                      {cat}
-                    </span>
-                  </label>
+                  </div>
                 ))}
               </div>
             </div>
@@ -233,18 +232,14 @@ const Marketplace = () => {
             {/* Sort By */}
             <div>
               <h3 className="font-label-md text-label-md text-on-surface-variant mb-md uppercase tracking-wider">Sort By</h3>
-              <select
+              <Dropdown
                 value={sortBy}
-                onChange={(e) => {
-                  setSortBy(e.target.value);
-                  updateURL({ sortBy: e.target.value });
+                options={sortOptions}
+                onChange={(val) => {
+                  setSortBy(val);
+                  updateURL({ sortBy: val });
                 }}
-                className="w-full bg-surface-container-low border-none rounded-lg p-2 text-sm focus:ring-1 focus:ring-primary text-on-surface outline-none"
-              >
-                <option>Most Recent</option>
-                <option>Price: Low to High</option>
-                <option>Price: High to Low</option>
-              </select>
+              />
             </div>
 
           </div>
@@ -384,15 +379,13 @@ const Marketplace = () => {
                   <h3 className="text-xs font-bold text-on-surface-variant mb-sm uppercase tracking-wider">Category</h3>
                   <div className="grid grid-cols-2 gap-sm">
                     {categoriesList.map(cat => (
-                      <label key={cat} className="flex items-center gap-xs cursor-pointer select-none">
-                        <input
-                          type="checkbox"
-                          checked={selectedCategories.includes(cat)}
-                          onChange={() => handleCategoryCheckbox(cat)}
-                          className="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary bg-surface-container-low"
-                        />
-                        <span className="text-xs font-semibold text-on-surface truncate">{cat}</span>
-                      </label>
+                      <Checkbox
+                        key={cat}
+                        checked={selectedCategories.includes(cat)}
+                        onChange={() => handleCategoryCheckbox(cat)}
+                        label={<span className="text-xs font-semibold text-on-surface truncate">{cat}</span>}
+                        size="18px"
+                      />
                     ))}
                   </div>
                 </div>
@@ -444,18 +437,14 @@ const Marketplace = () => {
                 {/* Sorting */}
                 <div>
                   <h3 className="text-xs font-bold text-on-surface-variant mb-sm uppercase tracking-wider">Sort By</h3>
-                  <select
+                  <Dropdown
                     value={sortBy}
-                    onChange={(e) => {
-                      setSortBy(e.target.value);
-                      updateURL({ sortBy: e.target.value });
+                    options={sortOptions}
+                    onChange={(val) => {
+                      setSortBy(val);
+                      updateURL({ sortBy: val });
                     }}
-                    className="w-full bg-surface-container-low border-none rounded-lg p-2 text-xs text-on-surface"
-                  >
-                    <option>Most Recent</option>
-                    <option>Price: Low to High</option>
-                    <option>Price: High to Low</option>
-                  </select>
+                  />
                 </div>
               </div>
             </div>
