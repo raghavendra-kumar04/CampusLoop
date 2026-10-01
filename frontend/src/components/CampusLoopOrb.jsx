@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 
-// Generative Tree Canvas Component (Direct React 2D Engine - No iframe overhead)
+// Generative Tree Canvas Component (High-Performance Direct React 2D Engine)
 export default function CampusLoopOrb({ className = '', style }) {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
@@ -8,7 +8,7 @@ export default function CampusLoopOrb({ className = '', style }) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: true });
     if (!ctx) return;
 
     let animId;
@@ -22,13 +22,14 @@ export default function CampusLoopOrb({ className = '', style }) {
       return t * t * (3 - 2 * t);
     }
 
-    const MAX_DEPTH = 10;
-    const GROWTH_SPEED_BASE = 0.007;
-    const HOLD_DURATION = 400;
-    const FADE_DURATION = 160;
-    const WAIT_DURATION = 60;
-    const PARTICLE_COUNT = 75;
+    const MAX_DEPTH = 7;
+    const GROWTH_SPEED_BASE = 0.012;
+    const HOLD_DURATION = 420;
+    const FADE_DURATION = 140;
+    const WAIT_DURATION = 50;
+    const PARTICLE_COUNT = 45;
 
+    // Pre-rendered Particle Sprite
     let particleSprite;
     function initParticleSprite() {
       particleSprite = document.createElement('canvas');
@@ -36,7 +37,7 @@ export default function CampusLoopOrb({ className = '', style }) {
       particleSprite.height = 32;
       const pctx = particleSprite.getContext('2d');
       const g = pctx.createRadialGradient(16, 16, 0, 16, 16, 16);
-      g.addColorStop(0, 'rgba(199, 210, 254, 0.95)');  // Soft Indigo/Cyan White Motes
+      g.addColorStop(0, 'rgba(199, 210, 254, 0.95)');
       g.addColorStop(0.4, 'rgba(99, 102, 241, 0.55)');
       g.addColorStop(1, 'rgba(79, 70, 229, 0)');
       pctx.fillStyle = g;
@@ -44,11 +45,32 @@ export default function CampusLoopOrb({ className = '', style }) {
     }
     initParticleSprite();
 
+    // Pre-rendered Luminous Crystal Leaf Tip Sprite (Avoids creating thousands of radial gradients per frame!)
+    let tipSprite;
+    function initTipSprite() {
+      tipSprite = document.createElement('canvas');
+      tipSprite.width = 32;
+      tipSprite.height = 32;
+      const tctx = tipSprite.getContext('2d');
+      const g = tctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+      g.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+      g.addColorStop(0.3, 'rgba(224, 231, 255, 0.75)');
+      g.addColorStop(0.65, 'rgba(165, 180, 252, 0.35)');
+      g.addColorStop(1, 'rgba(99, 102, 241, 0)');
+      tctx.fillStyle = g;
+      tctx.fillRect(0, 0, 32, 32);
+    }
+    initTipSprite();
+
     function resize() {
       if (!containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
-      W = canvas.width = rect.width || 500;
-      H = canvas.height = rect.height || 450;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = rect.width || 500;
+      H = rect.height || 450;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
     resize();
 
@@ -65,12 +87,12 @@ export default function CampusLoopOrb({ className = '', style }) {
         y: fullRandom ? rand(H * 0.1, H * 0.9) : rand(H * 0.4, H),
         vx: rand(-0.15, 0.15),
         vy: rand(-0.4, -0.08),
-        size: rand(0.8, 2.5),
-        alpha: rand(0.08, 0.3),
+        size: rand(0.8, 2.2),
+        alpha: rand(0.08, 0.28),
         phase: rand(0, Math.PI * 2),
         freq: rand(0.0004, 0.0015),
         life: fullRandom ? rand(0, 1) : 0,
-        lifeSpeed: rand(0.0006, 0.0025),
+        lifeSpeed: rand(0.0008, 0.0025),
       };
     }
 
@@ -94,7 +116,8 @@ export default function CampusLoopOrb({ className = '', style }) {
     }
 
     function drawParticles(drawCtx, globalAlpha) {
-      for (const p of particles) {
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
         const lifeFade = p.life < 0.15 ? p.life / 0.15
                        : p.life > 0.8 ? (1 - p.life) / 0.2
                        : 1;
@@ -140,36 +163,36 @@ export default function CampusLoopOrb({ className = '', style }) {
     let treeAlpha = 1;
     let treeState = 'growing';
     let holdTimer = 0, fadeTimer = 0, waitTimer = 0;
-    let mouseX = W / 2, mouseY = H / 2, mouseActive = false;
+    let mouseX = W / 2, mouseActive = false;
     let windForce = 0, shakeAmount = 0;
 
     function createTree() {
       allBranches = [];
 
-      const trunkLen = H * rand(0.24, 0.29);
-      const trunkThick = Math.max(7, W * 0.014);
-      const trunkAngle = -Math.PI / 2 + rand(-0.05, 0.05);
-
+      const trunkLen = H * rand(0.24, 0.28);
+      const trunkThick = Math.max(6, W * 0.012);
+      const trunkAngle = -Math.PI / 2 + rand(-0.04, 0.04);
       const baseY = H + trunkThick * 0.2;
 
       allBranches.push({
-        x0: W / 2 + rand(-W * 0.02, W * 0.02),
+        x0: W / 2 + rand(-W * 0.015, W * 0.015),
         y0: baseY,
         angle: trunkAngle,
         length: trunkLen,
         thickness: trunkThick,
         depth: 0,
         growthProgress: 0,
-        growthSpeed: GROWTH_SPEED_BASE * rand(0.9, 1.1),
+        growthSpeed: GROWTH_SPEED_BASE * rand(0.95, 1.1),
         children: [],
         spawned: false,
         swayPhase: rand(0, Math.PI * 2),
-        swayAmp: 0.0008,
-        curvature: rand(-0.015, 0.015),
-        colorShift: rand(-8, 8),
+        swayAmp: 0.0006,
+        sway: 0,
+        curvature: rand(-0.012, 0.012),
+        colorShift: rand(-6, 6),
         hueShift: 0,
         parent: null,
-        strokeSeeds: [rand(-1,1), rand(-1,1), rand(-1,1), rand(-1,1), rand(-1,1)],
+        strokeSeeds: [rand(-1, 1), rand(-1, 1), rand(-1, 1)],
         tipDots: [],
       });
 
@@ -183,41 +206,39 @@ export default function CampusLoopOrb({ className = '', style }) {
       if (parent.depth >= MAX_DEPTH) return;
 
       let numChildren;
-      if (parent.depth < 1) numChildren = 2 + (Math.random() < 0.35 ? 1 : 0);
-      else if (parent.depth < 3) numChildren = 2 + (Math.random() < 0.4 ? 1 : 0);
-      else numChildren = Math.random() < 0.25 ? 3 : 2;
+      if (parent.depth < 1) numChildren = 3;
+      else if (parent.depth < 3) numChildren = Math.random() < 0.6 ? 3 : 2;
+      else if (parent.depth < 5) numChildren = Math.random() < 0.45 ? 3 : 2;
+      else numChildren = 2;
 
-      const pruneChance = parent.depth <= 3 ? 0 : parent.depth <= 5 ? 0.1 : parent.depth <= 7 ? 0.22 : 0.35;
-      if (Math.random() < pruneChance) numChildren = Math.max(1, numChildren - 1);
-
-      const spread = parent.depth < 2 ? rand(0.32, 0.48) : rand(0.38, 0.6);
+      const spread = parent.depth < 2 ? rand(0.32, 0.46) : rand(0.36, 0.56);
 
       for (let i = 0; i < numChildren; i++) {
         let angleOffset;
         if (numChildren === 1) {
-          angleOffset = rand(-0.25, 0.25);
+          angleOffset = rand(-0.2, 0.2);
         } else if (numChildren === 2) {
           angleOffset = (i === 0 ? -1 : 1) * rand(0.18, spread);
         } else {
-          angleOffset = (i - 1) * spread + rand(-0.1, 0.1);
+          angleOffset = (i - 1) * spread + rand(-0.08, 0.08);
         }
 
         const childAngle = parent.angle + angleOffset;
-        const lengthFactor = rand(0.58, 0.76);
-        const thickFactor = rand(0.48, 0.67);
+        const lengthFactor = rand(0.62, 0.76);
+        const thickFactor = rand(0.52, 0.68);
 
-        const ep = getBranchEnd(parent, 1, 0);
+        const ep = getBranchEnd(parent, 1);
 
         const tipDots = [];
         const childDepth = parent.depth + 1;
-        if (childDepth >= MAX_DEPTH) {
-          const count = Math.random() < 0.4 ? 2 : 1;
+        if (childDepth >= MAX_DEPTH - 1) {
+          const count = Math.random() < 0.5 ? 2 : 1;
           for (let d = 0; d < count; d++) {
             tipDots.push({
-              ox: rand(-2, 2),
-              oy: rand(-2, 2),
-              size: rand(0.8, 1.8),
-              alpha: rand(0.1, 0.3),
+              ox: rand(-4, 4),
+              oy: rand(-4, 4),
+              size: rand(3.0, 5.5),
+              alpha: rand(0.4, 0.85),
             });
           }
         }
@@ -227,19 +248,20 @@ export default function CampusLoopOrb({ className = '', style }) {
           y0: ep.y,
           angle: childAngle,
           length: parent.length * lengthFactor,
-          thickness: Math.max(0.4, parent.thickness * thickFactor),
+          thickness: Math.max(0.6, parent.thickness * thickFactor),
           depth: childDepth,
           growthProgress: 0,
-          growthSpeed: GROWTH_SPEED_BASE * rand(1.0, 1.5) * (1 + parent.depth * 0.1),
+          growthSpeed: GROWTH_SPEED_BASE * rand(1.0, 1.4) * (1 + parent.depth * 0.08),
           children: [],
           spawned: false,
           swayPhase: rand(0, Math.PI * 2),
-          swayAmp: 0.0018 * (parent.depth + 1) * rand(0.7, 1.3),
-          curvature: rand(-0.04, 0.04) * (1 + parent.depth * 0.12),
-          colorShift: rand(-12, 12),
-          hueShift: Math.max(-1, Math.min(1, parent.hueShift + rand(-0.35, 0.35))),
+          swayAmp: 0.0014 * (parent.depth + 1) * rand(0.7, 1.2),
+          sway: 0,
+          curvature: rand(-0.035, 0.035) * (1 + parent.depth * 0.1),
+          colorShift: rand(-10, 10),
+          hueShift: Math.max(-1, Math.min(1, parent.hueShift + rand(-0.3, 0.3))),
           parent: parent,
-          strokeSeeds: [rand(-1,1), rand(-1,1), rand(-1,1), rand(-1,1), rand(-1,1)],
+          strokeSeeds: [rand(-1, 1), rand(-1, 1)],
           tipDots: tipDots,
         };
 
@@ -248,30 +270,8 @@ export default function CampusLoopOrb({ className = '', style }) {
       }
     }
 
-    function getSwayAngle(branch, time) {
-      let total = 0;
-      let b = branch;
-      let depth = 0;
-      while (b) {
-        const a = b.swayAmp;
-        total += Math.sin(time * 0.0005 + b.swayPhase) * a;
-        total += Math.sin(time * 0.0003 + b.swayPhase * 1.7) * a * 0.6;
-        total += Math.sin(time * 0.00012 + b.swayPhase * 0.4) * a * 0.35;
-        depth++;
-        b = b.parent;
-      }
-      if (mouseActive) {
-        total += windForce * 0.04 * depth;
-      }
-      if (shakeAmount > 0.01) {
-        total += Math.sin(time * 0.015 + branch.swayPhase * 3) * shakeAmount * 0.06 * depth;
-      }
-      return total;
-    }
-
-    function getBranchEnd(branch, progress, time) {
-      const sway = getSwayAngle(branch, time);
-      const angle = branch.angle + sway;
+    function getBranchEnd(branch, progress) {
+      const angle = branch.angle + (branch.sway || 0);
       const len = branch.length * progress;
       const perpX = -Math.sin(angle);
       const perpY = Math.cos(angle);
@@ -282,19 +282,35 @@ export default function CampusLoopOrb({ className = '', style }) {
       };
     }
 
-    function recalcPositions(time) {
-      for (const b of allBranches) {
+    // O(N) hierarchical sway and position update
+    function recalcPositionsAndSway(time) {
+      const windTarget = mouseActive ? windForce * 0.03 : 0;
+      const shakeVal = shakeAmount > 0.01 ? shakeAmount * 0.05 : 0;
+
+      for (let i = 0; i < allBranches.length; i++) {
+        const b = allBranches[i];
+        
+        // Compute local sway
+        const localSway = Math.sin(time * 0.0005 + b.swayPhase) * b.swayAmp;
+        const parentSway = b.parent ? b.parent.sway : 0;
+        
+        b.sway = parentSway + localSway;
+        if (windTarget !== 0) b.sway += windTarget;
+        if (shakeVal !== 0) b.sway += Math.sin(time * 0.015 + b.swayPhase * 3) * shakeVal;
+
         if (b.parent) {
-          const pe = getBranchEnd(b.parent, 1, time);
+          const pe = getBranchEnd(b.parent, 1);
           b.x0 = pe.x;
           b.y0 = pe.y;
         }
       }
     }
 
-    function updateBranches(time) {
+    function updateBranches() {
       let allDone = true;
-      for (const b of allBranches) {
+      const len = allBranches.length;
+      for (let i = 0; i < len; i++) {
+        const b = allBranches[i];
         if (b.growthProgress < 1) {
           b.growthProgress = Math.min(1, b.growthProgress + b.growthSpeed);
           allDone = false;
@@ -307,11 +323,10 @@ export default function CampusLoopOrb({ className = '', style }) {
       return allDone;
     }
 
-    function drawBranch(drawCtx, b, time) {
+    function drawBranch(drawCtx, b) {
       if (b.growthProgress <= 0) return;
 
-      const sway = getSwayAngle(b, time);
-      const angle = b.angle + sway;
+      const angle = b.angle + b.sway;
       const progress = easeOutCubic(b.growthProgress);
       const len = b.length * progress;
 
@@ -321,7 +336,7 @@ export default function CampusLoopOrb({ className = '', style }) {
       const perpX = -Math.sin(angle);
       const perpY = Math.cos(angle);
 
-      const curveOff = b.curvature * len * 1.4;
+      const curveOff = b.curvature * len * 1.3;
       const cpx1 = x1 + Math.cos(angle) * len * 0.33 + perpX * curveOff * 0.4;
       const cpy1 = y1 + Math.sin(angle) * len * 0.33 + perpY * curveOff * 0.4;
       const cpx2 = x1 + Math.cos(angle) * len * 0.66 + perpX * curveOff * 0.85;
@@ -332,29 +347,29 @@ export default function CampusLoopOrb({ className = '', style }) {
       const col = colorForDepth(b.depth, b.hueShift);
       const depthT = b.depth / MAX_DEPTH;
       const baseAlpha = b.depth <= 1 ? 0.95
-                      : b.depth <= 5 ? lerp(0.92, 0.7, depthT)
-                      : lerp(0.7, 0.35, (depthT - 0.5) * 2);
+                      : b.depth <= 4 ? lerp(0.92, 0.75, depthT)
+                      : lerp(0.75, 0.4, (depthT - 0.5) * 2);
 
-      const strokeCount = b.depth < 3 ? 5 : (b.depth < 6 ? 3 : 2);
+      const strokeCount = b.depth < 2 ? 2 : 1;
       const thickBase = b.thickness;
-      const thickTaper = lerp(thickBase, thickBase * 0.3, progress);
+      const thickTaper = lerp(thickBase, thickBase * 0.35, progress);
 
       for (let s = 0; s < strokeCount; s++) {
         const seed = b.strokeSeeds[s] || 0;
         const normalizedS = strokeCount > 1 ? (s / (strokeCount - 1) - 0.5) : 0;
 
-        const offsetAmt = normalizedS * thickBase * 0.35 + seed * thickBase * 0.08;
+        const offsetAmt = normalizedS * thickBase * 0.3 + seed * thickBase * 0.05;
         const ox = perpX * offsetAmt;
         const oy = perpY * offsetAmt;
 
-        const shift = normalizedS * 22 + b.colorShift * 0.3;
+        const shift = normalizedS * 18 + b.colorShift * 0.25;
         const r = Math.max(0, Math.min(255, col.r + shift));
         const g = Math.max(0, Math.min(255, col.g + shift * 0.65));
         const bb = Math.max(0, Math.min(255, col.b + shift * 0.8));
 
-        const isCore = s === Math.floor(strokeCount / 2);
-        const alpha = baseAlpha * (isCore ? 1.0 : 0.5);
-        const thick = thickTaper * (isCore ? 1.0 : lerp(0.65, 0.45, Math.abs(normalizedS)));
+        const isCore = s === 0;
+        const alpha = baseAlpha * (isCore ? 1.0 : 0.6);
+        const thick = thickTaper * (isCore ? 1.0 : 0.7);
 
         drawCtx.beginPath();
         drawCtx.moveTo(x1 + ox, y1 + oy);
@@ -369,40 +384,34 @@ export default function CampusLoopOrb({ className = '', style }) {
         drawCtx.stroke();
       }
 
-      // Luminous crystal leaf tips
-      if (b.tipDots.length > 0 && b.growthProgress > 0.9) {
-        const tipFade = smoothstep(0.9, 1.0, b.growthProgress);
-        const tr = Math.min(255, col.r * 1.1 + 50);
-        const tg2 = Math.min(255, col.g * 1.1 + 50);
-        const tb = Math.min(255, col.b * 1.1 + 70);
-        for (const dot of b.tipDots) {
+      // Fast hardware-accelerated crystal leaf tips using cached Sprite
+      if (b.tipDots.length > 0 && b.growthProgress > 0.85) {
+        const tipFade = smoothstep(0.85, 1.0, b.growthProgress);
+        for (let d = 0; d < b.tipDots.length; d++) {
+          const dot = b.tipDots[d];
           const dx = x2 + dot.ox;
           const dy = y2 + dot.oy;
-          const da = tipFade * dot.alpha;
-          const ds = dot.size;
-
-          const tg = drawCtx.createRadialGradient(dx, dy, 0, dx, dy, ds * 2.5);
-          tg.addColorStop(0, `rgba(${tr|0}, ${tg2|0}, ${tb|0}, ${da * 0.85})`);
-          tg.addColorStop(0.5, `rgba(${col.r|0}, ${col.g|0}, ${col.b|0}, ${da * 0.3})`);
-          tg.addColorStop(1, `rgba(${col.r|0}, ${col.g|0}, ${col.b|0}, 0)`);
-          drawCtx.fillStyle = tg;
-          drawCtx.beginPath();
-          drawCtx.arc(dx, dy, ds * 2.5, 0, Math.PI * 2);
-          drawCtx.fill();
+          const da = tipFade * dot.alpha * treeAlpha;
+          if (da < 0.01) continue;
+          const ds = dot.size * 2.2;
+          
+          drawCtx.globalAlpha = da;
+          drawCtx.drawImage(tipSprite, dx - ds, dy - ds, ds * 2, ds * 2);
         }
+        drawCtx.globalAlpha = treeAlpha;
       }
     }
 
     function drawScene(time) {
       ctx.clearRect(0, 0, W, H);
 
-      // Radial Light Halo (No box boundaries!)
+      // Radial Light Halo (Soft ambient glow)
       if (treeAlpha > 0.05) {
         const cx = W / 2, cy = H * 0.38;
         const radius = Math.min(W, H) * 0.45;
         const canopyGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
-        canopyGlow.addColorStop(0, `rgba(79, 70, 229, ${0.35 * treeAlpha})`);
-        canopyGlow.addColorStop(0.5, `rgba(99, 102, 241, ${0.12 * treeAlpha})`);
+        canopyGlow.addColorStop(0, `rgba(79, 70, 229, ${0.28 * treeAlpha})`);
+        canopyGlow.addColorStop(0.5, `rgba(99, 102, 241, ${0.09 * treeAlpha})`);
         canopyGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
         
         ctx.fillStyle = canopyGlow;
@@ -411,12 +420,13 @@ export default function CampusLoopOrb({ className = '', style }) {
         ctx.fill();
       }
 
-      recalcPositions(time);
+      recalcPositionsAndSway(time);
 
       ctx.save();
       ctx.globalAlpha = treeAlpha;
-      for (const b of allBranches) {
-        drawBranch(ctx, b, time);
+      const branchCount = allBranches.length;
+      for (let i = 0; i < branchCount; i++) {
+        drawBranch(ctx, allBranches[i]);
       }
       ctx.restore();
 
@@ -432,7 +442,7 @@ export default function CampusLoopOrb({ className = '', style }) {
 
       switch (treeState) {
         case 'growing': {
-          const done = updateBranches(time);
+          const done = updateBranches();
           drawScene(time);
           if (done) {
             treeState = 'holding';
@@ -475,7 +485,6 @@ export default function CampusLoopOrb({ className = '', style }) {
       if (!containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
       mouseX = e.clientX - rect.left;
-      mouseY = e.clientY - rect.top;
       mouseActive = true;
       windForce = (mouseX - W / 2) / (W / 2);
     };
@@ -491,9 +500,9 @@ export default function CampusLoopOrb({ className = '', style }) {
 
     const el = containerRef.current;
     if (el) {
-      el.addEventListener('mousemove', handleMouseMove);
-      el.addEventListener('mouseleave', handleMouseLeave);
-      el.addEventListener('click', handleClick);
+      el.addEventListener('mousemove', handleMouseMove, { passive: true });
+      el.addEventListener('mouseleave', handleMouseLeave, { passive: true });
+      el.addEventListener('click', handleClick, { passive: true });
     }
 
     createTree();
@@ -528,3 +537,4 @@ export default function CampusLoopOrb({ className = '', style }) {
     </div>
   );
 }
+
