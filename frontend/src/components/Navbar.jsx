@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
+import Switch from './Switch';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -43,13 +44,13 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-surface/80 dark:bg-inverse-surface/80 backdrop-blur-md sticky top-0 z-50 shadow-sm border-b border-outline-variant/10">
+    <nav className="bg-surface/85 backdrop-blur-md sticky top-0 z-50 shadow-sm border-b border-outline-variant/15 transition-colors duration-300">
       <div className="flex justify-between items-center w-full px-margin-mobile md:px-lg max-w-container-max mx-auto h-16">
         {/* Brand Logo */}
         <div className="flex items-center gap-md">
-          <Link to="/" className="flex items-center gap-2 font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim hover:opacity-90 transition-opacity">
-            <img src="/logo.png" alt="CampusLoop Logo" className="w-8 h-8 md:w-9 md:h-9 object-contain shrink-0" />
-            <span>CampusLoop</span>
+          <Link to="/" className="flex items-center gap-2 font-headline-md text-headline-md font-bold group hover:opacity-95 transition-opacity">
+            <img src="/logo.png" alt="CampusLoop Logo" className="w-8 h-8 md:w-9 md:h-9 object-contain shrink-0 group-hover:scale-105 transition-transform duration-200" />
+            <span className="animated-gradient-text tracking-tight">CampusLoop</span>
           </Link>
           {/* Desktop Nav Links */}
           <div className="hidden md:flex items-center gap-md ml-lg">
@@ -57,8 +58,8 @@ const Navbar = () => {
               to="/marketplace"
               className={`font-label-md text-label-md pb-1 border-b-2 transition-all ${
                 isMarketplace
-                  ? 'text-primary dark:text-primary-fixed-dim border-primary dark:border-primary-fixed-dim'
-                  : 'text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed-dim border-transparent'
+                  ? 'text-primary border-primary'
+                  : 'text-on-surface-variant hover:text-primary border-transparent'
               }`}
             >
               Marketplace
@@ -67,8 +68,8 @@ const Navbar = () => {
               to="/messages"
               className={`font-label-md text-label-md pb-1 border-b-2 transition-all ${
                 isChat
-                  ? 'text-primary dark:text-primary-fixed-dim border-primary dark:border-primary-fixed-dim'
-                  : 'text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed-dim border-transparent'
+                  ? 'text-primary border-primary'
+                  : 'text-on-surface-variant hover:text-primary border-transparent'
               }`}
             >
               Chat
@@ -77,8 +78,8 @@ const Navbar = () => {
               to="/sell"
               className={`font-label-md text-label-md pb-1 border-b-2 transition-all ${
                 isSell
-                  ? 'text-primary dark:text-primary-fixed-dim border-primary dark:border-primary-fixed-dim'
-                  : 'text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed-dim border-transparent'
+                  ? 'text-primary border-primary'
+                  : 'text-on-surface-variant hover:text-primary border-transparent'
               }`}
             >
               Sell
@@ -87,10 +88,10 @@ const Navbar = () => {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-sm">
+        <div className="flex items-center gap-2 sm:gap-3">
           {/* Search bar inside header, shown on Marketplace on desktop */}
           {isMarketplace && (
-            <form onSubmit={handleSearchSubmit} className="relative hidden sm:block w-64 lg:w-96">
+            <form onSubmit={handleSearchSubmit} className="relative hidden sm:block w-52 lg:w-80">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <span className="material-symbols-outlined text-outline">search</span>
               </div>
@@ -98,18 +99,24 @@ const Navbar = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 bg-surface-container dark:bg-surface-container-high/40 border-none rounded-xl focus:ring-2 focus:ring-primary focus:bg-surface transition-all text-sm text-on-surface outline-none"
+                className="block w-full pl-10 pr-3 py-2 bg-surface-container border-none rounded-xl focus:ring-2 focus:ring-primary focus:bg-surface transition-all text-sm text-on-surface outline-none"
                 placeholder="Search for textbooks, electronics..."
               />
             </form>
           )}
 
+          {/* Theme Toggle BB-8 Switch */}
+          <div className="flex items-center justify-center">
+            <Switch size="5.5px" />
+          </div>
+
           {/* Notifications Button */}
           <button
             onClick={() => user ? navigate('/notifications') : navigate('/auth')}
-            className="p-2 hover:bg-surface-container-high/50 dark:hover:bg-surface-container-highest/10 rounded-lg transition-all duration-200 active:scale-95 relative"
+            className="p-2 hover:bg-surface-container-high/60 rounded-lg transition-all duration-200 active:scale-95 relative"
+            aria-label="Notifications"
           >
-            <span className="material-symbols-outlined text-on-surface-variant dark:text-outline-variant">notifications</span>
+            <span className="material-symbols-outlined text-on-surface-variant">notifications</span>
             {unreadCount > 0 && (
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full"></span>
             )}
@@ -119,7 +126,8 @@ const Navbar = () => {
           <div className="relative" ref={profileRef}>
             <button
               onClick={handleProfileClick}
-              className="p-2 hover:bg-surface-container-high/50 dark:hover:bg-surface-container-highest/10 rounded-lg transition-all duration-200 active:scale-95 flex items-center justify-center"
+              className="p-2 hover:bg-surface-container-high/60 rounded-lg transition-all duration-200 active:scale-95 flex items-center justify-center"
+              aria-label="Profile menu"
             >
               {user && user.avatar ? (
                 <img
@@ -128,17 +136,17 @@ const Navbar = () => {
                   className="w-6 h-6 rounded-full object-cover border border-outline-variant/30"
                 />
               ) : (
-                <span className="material-symbols-outlined text-on-surface-variant dark:text-outline-variant">person</span>
+                <span className="material-symbols-outlined text-on-surface-variant">person</span>
               )}
             </button>
 
             {/* Profile Dropdown */}
             {showProfileMenu && user && (
-              <div className="absolute right-0 mt-2 w-48 bg-surface-container-lowest dark:bg-inverse-surface border border-outline-variant/30 dark:border-outline/30 rounded-xl shadow-lg py-2 z-50">
+              <div className="absolute right-0 mt-2 w-48 bg-surface-container-lowest border border-outline-variant/30 rounded-xl shadow-lg py-2 z-50">
                 <Link
                   to={`/profile/${user._id}`}
                   onClick={() => setShowProfileMenu(false)}
-                  className="block px-4 py-2 text-sm text-on-surface hover:bg-surface-container-high/50 dark:hover:bg-surface-container-highest/10 transition-colors"
+                  className="block px-4 py-2 text-sm text-on-surface hover:bg-surface-container-high/50 transition-colors"
                 >
                   My Profile
                 </Link>
@@ -147,7 +155,7 @@ const Navbar = () => {
                     logout();
                     setShowProfileMenu(false);
                   }}
-                  className="w-full text-left block px-4 py-2 text-sm text-error hover:bg-surface-container-high/50 dark:hover:bg-surface-container-highest/10 transition-colors"
+                  className="w-full text-left block px-4 py-2 text-sm text-error hover:bg-surface-container-high/50 transition-colors"
                 >
                   Log Out
                 </button>

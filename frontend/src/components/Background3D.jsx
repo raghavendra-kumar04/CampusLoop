@@ -2,9 +2,10 @@ import React, { useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { PointMaterial } from '@react-three/drei';
 import * as THREE from 'three';
+import { useTheme } from '../context/ThemeContext';
 
 // Antigravity Interactive Particle Wave Grid
-function ParticleWave() {
+function ParticleWave({ isDark }) {
   const pointsRef = useRef();
   const geometryRef = useRef();
 
@@ -19,9 +20,9 @@ function ParticleWave() {
     const colsArr = new Float32Array(count * 3);
     const basePos = new Float32Array(count * 3);
 
-    const c1 = new THREE.Color('#312e81'); // Deep Dark Indigo
-    const c2 = new THREE.Color('#1e1b4b'); // Midnight Violet
-    const c3 = new THREE.Color('#064e3b'); // Deep Dark Emerald
+    const c1 = isDark ? new THREE.Color('#818cf8') : new THREE.Color('#312e81');
+    const c2 = isDark ? new THREE.Color('#a855f7') : new THREE.Color('#1e1b4b');
+    const c3 = isDark ? new THREE.Color('#34d399') : new THREE.Color('#064e3b');
 
     let idx = 0;
     for (let i = 0; i < cols; i++) {
@@ -52,7 +53,7 @@ function ParticleWave() {
     }
 
     return [pos, colsArr, basePos];
-  }, [cols, rows, count]);
+  }, [cols, rows, count, isDark]);
 
   // Smooth mouse position tracking
   const mouseRef = useRef({ x: 0, y: 0, targetX: 0, targetY: 0 });
@@ -127,19 +128,26 @@ function ParticleWave() {
         size={0.05}
         sizeAttenuation={true}
         depthWrite={false}
-        opacity={0.45}
+        opacity={isDark ? 0.55 : 0.35}
         blending={THREE.NormalBlending}
       />
     </points>
   );
-
 }
 
 const Background3D = () => {
+  const { isDark } = useTheme();
+
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
       {/* Soft Ambient Radial Glow Backdrop */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(99,102,241,0.18)_0%,rgba(56,189,248,0.08)_45%,transparent_75%)] pointer-events-none" />
+      <div 
+        className={`absolute inset-0 transition-opacity duration-700 pointer-events-none ${
+          isDark
+            ? 'bg-[radial-gradient(circle_at_50%_35%,rgba(99,102,241,0.22)_0%,rgba(168,85,247,0.12)_35%,rgba(15,23,42,0.8)_80%)] opacity-90'
+            : 'bg-[radial-gradient(circle_at_50%_40%,rgba(99,102,241,0.14)_0%,rgba(56,189,248,0.06)_45%,transparent_75%)] opacity-70'
+        }`} 
+      />
 
       <Canvas
         camera={{ position: [0, 2, 10], fov: 55 }}
@@ -147,7 +155,7 @@ const Background3D = () => {
         style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
       >
         <ambientLight intensity={1} />
-        <ParticleWave />
+        <ParticleWave isDark={isDark} />
       </Canvas>
     </div>
   );

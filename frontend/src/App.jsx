@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
 import Navbar from './components/Navbar';
 import BottomNavbar from './components/BottomNavbar';
 import Footer from './components/Footer';
@@ -40,6 +41,8 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function AppContent() {
+  const { isDark } = useTheme();
+
   return (
     <Router>
       <Toaster
@@ -47,17 +50,17 @@ function AppContent() {
         toastOptions={{
           duration: 3500,
           style: {
-            background: '#1b1b24',
+            background: isDark ? '#1e293b' : '#1b1b24',
             color: '#ffffff',
             borderRadius: '0.85rem',
-            border: '1px solid rgba(199, 196, 216, 0.2)',
+            border: isDark ? '1px solid rgba(100, 116, 139, 0.3)' : '1px solid rgba(199, 196, 216, 0.2)',
             boxShadow: '0 10px 30px rgba(0,0,0,0.25)',
             fontSize: '14px',
             fontFamily: 'Plus Jakarta Sans, sans-serif'
           }
         }}
       />
-      <div className="min-h-screen bg-background text-on-background flex flex-col font-sans select-none pb-16 md:pb-0 relative">
+      <div className="min-h-screen bg-background text-on-background flex flex-col font-sans select-none pb-16 md:pb-0 relative transition-colors duration-300">
         <React.Suspense fallback={null}>
           <Background3D />
         </React.Suspense>
@@ -128,13 +131,15 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <SocketProvider>
-        <NotificationProvider>
-          <AppContent />
-        </NotificationProvider>
-      </SocketProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <SocketProvider>
+          <NotificationProvider>
+            <AppContent />
+          </NotificationProvider>
+        </SocketProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

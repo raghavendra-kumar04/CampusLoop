@@ -1,9 +1,16 @@
 import React, { useEffect, useRef } from 'react';
+import { useTheme } from '../context/ThemeContext';
 
-// Generative Tree Canvas Component (High-Performance Direct React 2D Engine)
+// High-Performance Generative Botanical Tree Canvas with Lush Gradient Foliage
 export default function CampusLoopOrb({ className = '', style }) {
+  const { isDark } = useTheme();
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
+  const isDarkRef = useRef(isDark);
+
+  useEffect(() => {
+    isDarkRef.current = isDark;
+  }, [isDark]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -12,7 +19,8 @@ export default function CampusLoopOrb({ className = '', style }) {
     if (!ctx) return;
 
     let animId;
-    let W = 0, H = 0;
+    let W = 0, H = 0, scaleFactor = 1;
+    let isVisible = true;
 
     function lerp(a, b, t) { return a + (b - a) * t; }
     function rand(lo, hi) { return Math.random() * (hi - lo) + lo; }
@@ -22,45 +30,78 @@ export default function CampusLoopOrb({ className = '', style }) {
       return t * t * (3 - 2 * t);
     }
 
-    const MAX_DEPTH = 7;
+    const MAX_DEPTH = 6;
     const GROWTH_SPEED_BASE = 0.012;
-    const HOLD_DURATION = 420;
-    const FADE_DURATION = 140;
-    const WAIT_DURATION = 50;
-    const PARTICLE_COUNT = 45;
+    const HOLD_DURATION = 460;
+    const FADE_DURATION = 120;
+    const WAIT_DURATION = 35;
+    const PARTICLE_COUNT = 38;
 
-    // Pre-rendered Particle Sprite
-    let particleSprite;
-    function initParticleSprite() {
-      particleSprite = document.createElement('canvas');
-      particleSprite.width = 32;
-      particleSprite.height = 32;
-      const pctx = particleSprite.getContext('2d');
-      const g = pctx.createRadialGradient(16, 16, 0, 16, 16, 16);
-      g.addColorStop(0, 'rgba(199, 210, 254, 0.95)');
-      g.addColorStop(0.4, 'rgba(99, 102, 241, 0.55)');
-      g.addColorStop(1, 'rgba(79, 70, 229, 0)');
-      pctx.fillStyle = g;
-      pctx.fillRect(0, 0, 32, 32);
-    }
-    initParticleSprite();
+    // Harmonic Spectral Gradient Palette Stops
+    const GRADIENT_STOPS_LIGHT = [
+      { pos: 0.00, r: 99,  g: 102, b: 241 }, // Indigo / Violet
+      { pos: 0.20, r: 168, g: 85,  b: 247 }, // Purple Orchid
+      { pos: 0.40, r: 236, g: 72,  b: 153 }, // Rose Pink
+      { pos: 0.60, r: 249, g: 115, b: 22  }, // Sunset Coral
+      { pos: 0.80, r: 16,  g: 185, b: 129 }, // Emerald Jade
+      { pos: 1.00, r: 6,   g: 182, b: 212 }, // Sky Cyan
+    ];
 
-    // Pre-rendered Luminous Crystal Leaf Tip Sprite (Avoids creating thousands of radial gradients per frame!)
-    let tipSprite;
-    function initTipSprite() {
-      tipSprite = document.createElement('canvas');
-      tipSprite.width = 32;
-      tipSprite.height = 32;
-      const tctx = tipSprite.getContext('2d');
-      const g = tctx.createRadialGradient(16, 16, 0, 16, 16, 16);
-      g.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-      g.addColorStop(0.3, 'rgba(224, 231, 255, 0.75)');
-      g.addColorStop(0.65, 'rgba(165, 180, 252, 0.35)');
-      g.addColorStop(1, 'rgba(99, 102, 241, 0)');
-      tctx.fillStyle = g;
-      tctx.fillRect(0, 0, 32, 32);
+    const GRADIENT_STOPS_DARK = [
+      { pos: 0.00, r: 129, g: 140, b: 248 }, // Soft Periwinkle
+      { pos: 0.20, r: 192, g: 132, b: 252 }, // Radiant Lavender
+      { pos: 0.40, r: 244, g: 114, b: 182 }, // Neon Blossom Pink
+      { pos: 0.60, r: 251, g: 146, b: 60  }, // Sunlit Amber
+      { pos: 0.80, r: 52,  g: 211, b: 153 }, // Aurora Mint
+      { pos: 1.00, r: 56,  g: 189, b: 248 }, // Sky Cyan
+    ];
+
+    function getGradientColor(t, isDarkTheme) {
+      const stops = isDarkTheme ? GRADIENT_STOPS_DARK : GRADIENT_STOPS_LIGHT;
+      const clamped = Math.max(0, Math.min(1, t));
+
+      for (let i = 0; i < stops.length - 1; i++) {
+        const s0 = stops[i];
+        const s1 = stops[i + 1];
+        if (clamped >= s0.pos && clamped <= s1.pos) {
+          const ratio = (clamped - s0.pos) / (s1.pos - s0.pos);
+          return {
+            r: Math.round(lerp(s0.r, s1.r, ratio)),
+            g: Math.round(lerp(s0.g, s1.g, ratio)),
+            b: Math.round(lerp(s0.b, s1.b, ratio)),
+          };
+        }
+      }
+      return stops[stops.length - 1];
     }
-    initTipSprite();
+
+    // Pre-rendered Particle Sprites for lag-free particle drawing
+    let particleSpriteDark, particleSpriteLight;
+    function initParticleSprites() {
+      particleSpriteDark = document.createElement('canvas');
+      particleSpriteDark.width = 32;
+      particleSpriteDark.height = 32;
+      const pctxDark = particleSpriteDark.getContext('2d');
+      const gDark = pctxDark.createRadialGradient(16, 16, 0, 16, 16, 16);
+      gDark.addColorStop(0, 'rgba(244, 114, 182, 0.95)');
+      gDark.addColorStop(0.4, 'rgba(129, 140, 248, 0.55)');
+      gDark.addColorStop(1, 'rgba(99, 102, 241, 0)');
+      pctxDark.fillStyle = gDark;
+      pctxDark.fillRect(0, 0, 32, 32);
+
+      particleSpriteLight = document.createElement('canvas');
+      particleSpriteLight.width = 32;
+      particleSpriteLight.height = 32;
+      const pctxLight = particleSpriteLight.getContext('2d');
+      const gLight = pctxLight.createRadialGradient(16, 16, 0, 16, 16, 16);
+      gLight.addColorStop(0, 'rgba(236, 72, 153, 0.95)');
+      gLight.addColorStop(0.4, 'rgba(99, 102, 241, 0.6)');
+      gLight.addColorStop(0.8, 'rgba(16, 185, 129, 0.25)');
+      gLight.addColorStop(1, 'rgba(16, 185, 129, 0)');
+      pctxLight.fillStyle = gLight;
+      pctxLight.fillRect(0, 0, 32, 32);
+    }
+    initParticleSprites();
 
     function resize() {
       if (!containerRef.current) return;
@@ -68,6 +109,7 @@ export default function CampusLoopOrb({ className = '', style }) {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       W = rect.width || 500;
       H = rect.height || 450;
+      scaleFactor = Math.min(Math.max(W / 520, 0.65), 1.25);
       canvas.width = W * dpr;
       canvas.height = H * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -79,20 +121,27 @@ export default function CampusLoopOrb({ className = '', style }) {
     });
     if (containerRef.current) resizeObserver.observe(containerRef.current);
 
-    // Particles
+    // Pause rendering when off-screen to guarantee 0% CPU waste and buttery load performance
+    const intersectionObserver = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      isVisible = entry.isIntersecting;
+    }, { threshold: 0.05 });
+    if (containerRef.current) intersectionObserver.observe(containerRef.current);
+
+    // Floating Spore/Petal Particles
     let particles = [];
     function createParticle(fullRandom) {
       return {
         x: rand(W * 0.05, W * 0.95),
         y: fullRandom ? rand(H * 0.1, H * 0.9) : rand(H * 0.4, H),
-        vx: rand(-0.15, 0.15),
-        vy: rand(-0.4, -0.08),
-        size: rand(0.8, 2.2),
-        alpha: rand(0.08, 0.28),
+        vx: rand(-0.25, 0.25),
+        vy: rand(-0.35, -0.06),
+        size: rand(0.9, 2.4) * scaleFactor,
+        alpha: rand(0.12, 0.35),
         phase: rand(0, Math.PI * 2),
-        freq: rand(0.0004, 0.0015),
+        freq: rand(0.0006, 0.002),
         life: fullRandom ? rand(0, 1) : 0,
-        lifeSpeed: rand(0.0008, 0.0025),
+        lifeSpeed: rand(0.001, 0.0028),
       };
     }
 
@@ -106,7 +155,7 @@ export default function CampusLoopOrb({ className = '', style }) {
     function updateParticles(time) {
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
-        p.x += p.vx + Math.sin(time * p.freq + p.phase) * 0.25;
+        p.x += p.vx + Math.sin(time * p.freq + p.phase) * 0.3;
         p.y += p.vy;
         p.life += p.lifeSpeed;
         if (p.life > 1 || p.y < -10 || p.x < -10 || p.x > W + 10) {
@@ -116,47 +165,21 @@ export default function CampusLoopOrb({ className = '', style }) {
     }
 
     function drawParticles(drawCtx, globalAlpha) {
+      const dark = isDarkRef.current;
+      const sprite = dark ? particleSpriteDark : particleSpriteLight;
+
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
         const lifeFade = p.life < 0.15 ? p.life / 0.15
                        : p.life > 0.8 ? (1 - p.life) / 0.2
                        : 1;
-        const a = p.alpha * lifeFade * globalAlpha;
+        const a = p.alpha * lifeFade * globalAlpha * (dark ? 1.0 : 1.25);
         if (a < 0.004) continue;
-        const s = p.size * 3;
-        drawCtx.globalAlpha = a;
-        drawCtx.drawImage(particleSprite, p.x - s, p.y - s, s * 2, s * 2);
+        const s = p.size * (dark ? 2.8 : 3.2);
+        drawCtx.globalAlpha = Math.min(1, a);
+        drawCtx.drawImage(sprite, p.x - s, p.y - s, s * 2, s * 2);
       }
       drawCtx.globalAlpha = 1;
-    }
-
-    // Cohesive Page Palette
-    const PALETTE = [
-      { r: 49, g: 46, b: 129 },    // #312e81 Deep Indigo Trunk
-      { r: 67, g: 56, b: 202 },    // #4338ca Branch
-      { r: 79, g: 70, b: 229 },    // #4f46e5 Primary Indigo
-      { r: 99, g: 102, b: 241 },   // #6366f1 Indigo Accent
-      { r: 129, g: 140, b: 248 },  // #818cf8 Soft Sky Indigo
-      { r: 199, g: 210, b: 254 },  // #c7d2fe Luminous Crystal Tips
-    ];
-
-    function colorForDepth(depth, hueShift) {
-      const t = depth / MAX_DEPTH;
-      const idx = t * (PALETTE.length - 1);
-      const i0 = Math.floor(idx);
-      const i1 = Math.min(PALETTE.length - 1, i0 + 1);
-      const f = idx - i0;
-      let r = lerp(PALETTE[i0].r, PALETTE[i1].r, f);
-      let g = lerp(PALETTE[i0].g, PALETTE[i1].g, f);
-      let b = lerp(PALETTE[i0].b, PALETTE[i1].b, f);
-
-      if (hueShift !== undefined) {
-        const strength = t * t * 15;
-        r += hueShift * strength * 0.5;
-        g += hueShift * strength * 0.5;
-        b += hueShift * strength * 1.0;
-      }
-      return { r, g, b };
     }
 
     let allBranches = [];
@@ -169,9 +192,9 @@ export default function CampusLoopOrb({ className = '', style }) {
     function createTree() {
       allBranches = [];
 
-      const trunkLen = H * rand(0.24, 0.28);
-      const trunkThick = Math.max(6, W * 0.012);
-      const trunkAngle = -Math.PI / 2 + rand(-0.04, 0.04);
+      const trunkLen = H * rand(0.24, 0.29) * scaleFactor;
+      const trunkThick = Math.max(5.0, W * 0.0115);
+      const trunkAngle = -Math.PI / 2 + rand(-0.03, 0.03);
       const baseY = H + trunkThick * 0.2;
 
       allBranches.push({
@@ -188,12 +211,9 @@ export default function CampusLoopOrb({ className = '', style }) {
         swayPhase: rand(0, Math.PI * 2),
         swayAmp: 0.0006,
         sway: 0,
-        curvature: rand(-0.012, 0.012),
-        colorShift: rand(-6, 6),
-        hueShift: 0,
+        curvature: rand(-0.01, 0.01),
         parent: null,
-        strokeSeeds: [rand(-1, 1), rand(-1, 1), rand(-1, 1)],
-        tipDots: [],
+        leaves: [],
       });
 
       treeState = 'growing';
@@ -207,38 +227,58 @@ export default function CampusLoopOrb({ className = '', style }) {
 
       let numChildren;
       if (parent.depth < 1) numChildren = 3;
-      else if (parent.depth < 3) numChildren = Math.random() < 0.6 ? 3 : 2;
-      else if (parent.depth < 5) numChildren = Math.random() < 0.45 ? 3 : 2;
+      else if (parent.depth < 3) numChildren = Math.random() < 0.65 ? 3 : 2;
+      else if (parent.depth < 5) numChildren = Math.random() < 0.5 ? 3 : 2;
       else numChildren = 2;
 
-      const spread = parent.depth < 2 ? rand(0.32, 0.46) : rand(0.36, 0.56);
+      const spread = parent.depth < 2 ? rand(0.34, 0.50) : rand(0.38, 0.62);
 
       for (let i = 0; i < numChildren; i++) {
         let angleOffset;
         if (numChildren === 1) {
           angleOffset = rand(-0.2, 0.2);
         } else if (numChildren === 2) {
-          angleOffset = (i === 0 ? -1 : 1) * rand(0.18, spread);
+          angleOffset = (i === 0 ? -1 : 1) * rand(0.20, spread);
         } else {
-          angleOffset = (i - 1) * spread + rand(-0.08, 0.08);
+          angleOffset = (i - 1) * spread + rand(-0.09, 0.09);
         }
 
         const childAngle = parent.angle + angleOffset;
-        const lengthFactor = rand(0.62, 0.76);
+        const lengthFactor = rand(0.55, 0.88);
         const thickFactor = rand(0.52, 0.68);
-
         const ep = getBranchEnd(parent, 1);
-
-        const tipDots = [];
         const childDepth = parent.depth + 1;
-        if (childDepth >= MAX_DEPTH - 1) {
-          const count = Math.random() < 0.5 ? 2 : 1;
-          for (let d = 0; d < count; d++) {
-            tipDots.push({
-              ox: rand(-4, 4),
-              oy: rand(-4, 4),
-              size: rand(3.0, 5.5),
-              alpha: rand(0.4, 0.85),
+
+        // Lush Foliage: Organically distributed leaf pairs and tip clusters
+        const leaves = [];
+        if (childDepth >= 2) {
+          // Add 3 to 6 leaves per branch at varying branch ratios (depths 2-6)
+          const leafCount = childDepth >= 4 ? (Math.random() < 0.7 ? 5 : 4) : (Math.random() < 0.5 ? 3 : 2);
+          
+          for (let l = 0; l < leafCount; l++) {
+            const ratio = (l + 1) / (leafCount + 0.5);
+            const branchPos = Math.min(1.0, Math.max(0.25, ratio + rand(-0.08, 0.08)));
+            const side = l % 2 === 0 ? 1 : -1;
+            
+            leaves.push({
+              branchPos,
+              leafAngle: childAngle + side * rand(0.35, 0.85),
+              length: rand(6.0, 11.5) * scaleFactor,
+              width: rand(3.0, 5.5) * scaleFactor,
+              colorSeed: rand(-0.08, 0.08),
+              alpha: rand(0.72, 0.95),
+            });
+          }
+
+          // Tip blossom cluster at the branch end
+          if (childDepth >= 4) {
+            leaves.push({
+              branchPos: 1.0,
+              leafAngle: childAngle + rand(-0.15, 0.15),
+              length: rand(7.0, 12.0) * scaleFactor,
+              width: rand(3.5, 6.0) * scaleFactor,
+              colorSeed: 0,
+              alpha: rand(0.85, 0.98),
             });
           }
         }
@@ -251,18 +291,15 @@ export default function CampusLoopOrb({ className = '', style }) {
           thickness: Math.max(0.6, parent.thickness * thickFactor),
           depth: childDepth,
           growthProgress: 0,
-          growthSpeed: GROWTH_SPEED_BASE * rand(1.0, 1.4) * (1 + parent.depth * 0.08),
+          growthSpeed: GROWTH_SPEED_BASE * rand(1.0, 1.45) * (1 + parent.depth * 0.09),
           children: [],
           spawned: false,
           swayPhase: rand(0, Math.PI * 2),
           swayAmp: 0.0014 * (parent.depth + 1) * rand(0.7, 1.2),
           sway: 0,
           curvature: rand(-0.035, 0.035) * (1 + parent.depth * 0.1),
-          colorShift: rand(-10, 10),
-          hueShift: Math.max(-1, Math.min(1, parent.hueShift + rand(-0.3, 0.3))),
           parent: parent,
-          strokeSeeds: [rand(-1, 1), rand(-1, 1)],
-          tipDots: tipDots,
+          leaves: leaves,
         };
 
         parent.children.push(child);
@@ -282,15 +319,24 @@ export default function CampusLoopOrb({ className = '', style }) {
       };
     }
 
-    // O(N) hierarchical sway and position update
+    function getBranchPointAt(branch, tProgress) {
+      const angle = branch.angle + (branch.sway || 0);
+      const len = branch.length * tProgress;
+      const perpX = -Math.sin(angle);
+      const perpY = Math.cos(angle);
+      const curveOff = branch.curvature * len;
+      return {
+        x: branch.x0 + Math.cos(angle) * len + perpX * curveOff,
+        y: branch.y0 + Math.sin(angle) * len + perpY * curveOff,
+      };
+    }
+
     function recalcPositionsAndSway(time) {
       const windTarget = mouseActive ? windForce * 0.03 : 0;
       const shakeVal = shakeAmount > 0.01 ? shakeAmount * 0.05 : 0;
 
       for (let i = 0; i < allBranches.length; i++) {
         const b = allBranches[i];
-        
-        // Compute local sway
         const localSway = Math.sin(time * 0.0005 + b.swayPhase) * b.swayAmp;
         const parentSway = b.parent ? b.parent.sway : 0;
         
@@ -326,6 +372,7 @@ export default function CampusLoopOrb({ className = '', style }) {
     function drawBranch(drawCtx, b) {
       if (b.growthProgress <= 0) return;
 
+      const dark = isDarkRef.current;
       const angle = b.angle + b.sway;
       const progress = easeOutCubic(b.growthProgress);
       const len = b.length * progress;
@@ -344,75 +391,105 @@ export default function CampusLoopOrb({ className = '', style }) {
       const x2 = x1 + Math.cos(angle) * len + perpX * curveOff * 0.7;
       const y2 = y1 + Math.sin(angle) * len + perpX * curveOff * 0.7;
 
-      const col = colorForDepth(b.depth, b.hueShift);
+      const normX = Math.max(0, Math.min(1, (x2 - W * 0.15) / (W * 0.7)));
       const depthT = b.depth / MAX_DEPTH;
-      const baseAlpha = b.depth <= 1 ? 0.95
-                      : b.depth <= 4 ? lerp(0.92, 0.75, depthT)
-                      : lerp(0.75, 0.4, (depthT - 0.5) * 2);
+      const gradColor = getGradientColor(normX, dark);
 
-      const strokeCount = b.depth < 2 ? 2 : 1;
+      // Deep sturdy trunk transitioning into smooth gradient branches
+      let r, g, bb;
+      if (b.depth === 0) {
+        r = dark ? 49 : 30;
+        g = dark ? 46 : 27;
+        bb = dark ? 129 : 75;
+      } else {
+        const blend = depthT * 0.75;
+        const trunkR = dark ? 49 : 30;
+        const trunkG = dark ? 46 : 27;
+        const trunkB = dark ? 129 : 75;
+        r = Math.round(lerp(trunkR, gradColor.r, blend));
+        g = Math.round(lerp(trunkG, gradColor.g, blend));
+        bb = Math.round(lerp(trunkB, gradColor.b, blend));
+      }
+
+      const baseAlpha = b.depth <= 1 ? (dark ? 0.95 : 1.0)
+                      : b.depth <= 3 ? lerp(dark ? 0.92 : 0.98, dark ? 0.82 : 0.92, depthT)
+                      : lerp(dark ? 0.82 : 0.92, dark ? 0.55 : 0.75, (depthT - 0.5) * 2);
+
       const thickBase = b.thickness;
       const thickTaper = lerp(thickBase, thickBase * 0.35, progress);
 
-      for (let s = 0; s < strokeCount; s++) {
-        const seed = b.strokeSeeds[s] || 0;
-        const normalizedS = strokeCount > 1 ? (s / (strokeCount - 1) - 0.5) : 0;
+      // Draw Branch Stroke
+      drawCtx.beginPath();
+      drawCtx.moveTo(x1, y1);
+      drawCtx.bezierCurveTo(cpx1, cpy1, cpx2, cpy2, x2, y2);
+      drawCtx.strokeStyle = `rgba(${r}, ${g}, ${bb}, ${baseAlpha})`;
+      drawCtx.lineWidth = thickTaper;
+      drawCtx.lineCap = 'round';
+      drawCtx.stroke();
 
-        const offsetAmt = normalizedS * thickBase * 0.3 + seed * thickBase * 0.05;
-        const ox = perpX * offsetAmt;
-        const oy = perpY * offsetAmt;
+      // Draw Lush Foliage Leaves (Fast, lightweight direct path drawing with pre-calculated RGB)
+      if (b.leaves && b.leaves.length > 0 && b.growthProgress > 0.35) {
+        for (let l = 0; l < b.leaves.length; l++) {
+          const leaf = b.leaves[l];
+          if (progress < leaf.branchPos) continue;
 
-        const shift = normalizedS * 18 + b.colorShift * 0.25;
-        const r = Math.max(0, Math.min(255, col.r + shift));
-        const g = Math.max(0, Math.min(255, col.g + shift * 0.65));
-        const bb = Math.max(0, Math.min(255, col.b + shift * 0.8));
+          const leafBloom = smoothstep(leaf.branchPos * 0.8, leaf.branchPos, progress);
+          if (leafBloom <= 0.02) continue;
 
-        const isCore = s === 0;
-        const alpha = baseAlpha * (isCore ? 1.0 : 0.6);
-        const thick = thickTaper * (isCore ? 1.0 : 0.7);
+          const leafPt = getBranchPointAt(b, leaf.branchPos * progress);
+          const leafNormX = Math.max(0, Math.min(1, (leafPt.x - W * 0.15) / (W * 0.7) + leaf.colorSeed));
+          const leafColor = getGradientColor(leafNormX, dark);
 
-        drawCtx.beginPath();
-        drawCtx.moveTo(x1 + ox, y1 + oy);
-        drawCtx.bezierCurveTo(
-          cpx1 + ox, cpy1 + oy,
-          cpx2 + ox, cpy2 + oy,
-          x2 + ox, y2 + oy
-        );
-        drawCtx.strokeStyle = `rgba(${r | 0}, ${g | 0}, ${bb | 0}, ${alpha})`;
-        drawCtx.lineWidth = thick;
-        drawCtx.lineCap = 'round';
-        drawCtx.stroke();
-      }
+          const curLen = leaf.length * leafBloom;
+          const curWid = leaf.width * leafBloom;
+          const leafAlpha = leaf.alpha * treeAlpha * leafBloom;
 
-      // Fast hardware-accelerated crystal leaf tips using cached Sprite
-      if (b.tipDots.length > 0 && b.growthProgress > 0.85) {
-        const tipFade = smoothstep(0.85, 1.0, b.growthProgress);
-        for (let d = 0; d < b.tipDots.length; d++) {
-          const dot = b.tipDots[d];
-          const dx = x2 + dot.ox;
-          const dy = y2 + dot.oy;
-          const da = tipFade * dot.alpha * treeAlpha;
-          if (da < 0.01) continue;
-          const ds = dot.size * 2.2;
-          
-          drawCtx.globalAlpha = da;
-          drawCtx.drawImage(tipSprite, dx - ds, dy - ds, ds * 2, ds * 2);
+          drawCtx.save();
+          drawCtx.translate(leafPt.x, leafPt.y);
+          drawCtx.rotate(leaf.leafAngle + (b.sway || 0) * 0.5);
+
+          // Fast organic leaf path
+          drawCtx.beginPath();
+          drawCtx.moveTo(0, 0);
+          drawCtx.quadraticCurveTo(curWid, -curLen * 0.45, 0, -curLen);
+          drawCtx.quadraticCurveTo(-curWid, -curLen * 0.45, 0, 0);
+
+          drawCtx.fillStyle = `rgba(${leafColor.r}, ${leafColor.g}, ${leafColor.b}, ${leafAlpha * 0.88})`;
+          drawCtx.fill();
+
+          // Delicate luminous vein spine
+          drawCtx.beginPath();
+          drawCtx.moveTo(0, 0);
+          drawCtx.lineTo(0, -curLen * 0.8);
+          drawCtx.strokeStyle = `rgba(255, 255, 255, ${leafAlpha * 0.4})`;
+          drawCtx.lineWidth = 0.65;
+          drawCtx.stroke();
+
+          drawCtx.restore();
         }
-        drawCtx.globalAlpha = treeAlpha;
       }
     }
 
     function drawScene(time) {
+      const dark = isDarkRef.current;
       ctx.clearRect(0, 0, W, H);
 
-      // Radial Light Halo (Soft ambient glow)
+      // Soft ambient radiant canopy halo
       if (treeAlpha > 0.05) {
-        const cx = W / 2, cy = H * 0.38;
-        const radius = Math.min(W, H) * 0.45;
+        const cx = W / 2, cy = H * 0.42;
+        const radius = Math.min(W, H) * 0.48;
         const canopyGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
-        canopyGlow.addColorStop(0, `rgba(79, 70, 229, ${0.28 * treeAlpha})`);
-        canopyGlow.addColorStop(0.5, `rgba(99, 102, 241, ${0.09 * treeAlpha})`);
-        canopyGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        
+        if (dark) {
+          canopyGlow.addColorStop(0, `rgba(168, 85, 247, ${0.18 * treeAlpha})`);
+          canopyGlow.addColorStop(0.45, `rgba(99, 102, 241, ${0.08 * treeAlpha})`);
+          canopyGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        } else {
+          canopyGlow.addColorStop(0, `rgba(236, 72, 153, ${0.12 * treeAlpha})`);
+          canopyGlow.addColorStop(0.4, `rgba(99, 102, 241, ${0.07 * treeAlpha})`);
+          canopyGlow.addColorStop(0.8, `rgba(16, 185, 129, ${0.04 * treeAlpha})`);
+          canopyGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        }
         
         ctx.fillStyle = canopyGlow;
         ctx.beginPath();
@@ -437,6 +514,12 @@ export default function CampusLoopOrb({ className = '', style }) {
     }
 
     function frame(time) {
+      if (!isVisible) {
+        // Skip rendering when off-screen to preserve 100% CPU/GPU performance
+        animId = requestAnimationFrame(frame);
+        return;
+      }
+
       if (shakeAmount > 0.01) shakeAmount *= 0.95;
       else shakeAmount = 0;
 
@@ -511,6 +594,7 @@ export default function CampusLoopOrb({ className = '', style }) {
     return () => {
       cancelAnimationFrame(animId);
       resizeObserver.disconnect();
+      intersectionObserver.disconnect();
       if (el) {
         el.removeEventListener('mousemove', handleMouseMove);
         el.removeEventListener('mouseleave', handleMouseLeave);
@@ -522,8 +606,14 @@ export default function CampusLoopOrb({ className = '', style }) {
   return (
     <div
       ref={containerRef}
-      className={`w-full h-[400px] sm:h-[460px] md:h-[520px] relative pointer-events-auto ${className}`}
-      style={{ background: 'transparent', filter: 'brightness(1.80)', ...style }}
+      className={`w-full h-[360px] sm:h-[440px] md:h-[500px] relative pointer-events-auto transition-all duration-500 will-change-transform ${className}`}
+      style={{
+        background: 'transparent',
+        filter: isDark
+          ? 'brightness(1.35) drop-shadow(0 0 20px rgba(168, 85, 247, 0.2))'
+          : 'brightness(1.02) contrast(1.08) drop-shadow(0 4px 18px rgba(99, 102, 241, 0.12))',
+        ...style
+      }}
     >
       <canvas
         ref={canvasRef}
@@ -537,4 +627,3 @@ export default function CampusLoopOrb({ className = '', style }) {
     </div>
   );
 }
-
