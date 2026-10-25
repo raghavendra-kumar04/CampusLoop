@@ -126,11 +126,6 @@ CLOUDINARY_API_SECRET=your_api_secret
 GEMINI_API_KEY=your_gemini_api_key_optional
 ```
 
-Seed the administrator account:
-```bash
-node seedAdmin.js
-```
-
 Start backend development server:
 ```bash
 npm run dev

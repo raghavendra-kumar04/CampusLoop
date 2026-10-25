@@ -3,9 +3,13 @@ const User = require('../models/User');
 
 // Helper to generate JWT Token
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'jwt_secret_dev_key_123', {
-    expiresIn: '30d',
-  });
+  return jwt.sign(
+    { id },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: '30d',
+    }
+  );
 };
 
 // @desc    Register a new student
@@ -71,8 +75,15 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ message: 'Please add email and password' });
     }
 
-    // Find User
-    const user = await User.findOne({ email }).select('+password');
+    // Find User (case-insensitive and trimmed)
+    const normalizedEmail = (email || '').trim().toLowerCase();
+    const user = await User.findOne({
+      $or: [
+        { email: normalizedEmail },
+        { email: (email || '').trim() },
+        { email: new RegExp(`^${(email || '').trim()}$`, 'i') }
+      ]
+    }).select('+password');
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }

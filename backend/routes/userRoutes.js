@@ -5,18 +5,15 @@ const { blockUser, unblockUser, getBlockedUsers } = require('../controllers/repo
 const { protect } = require('../middleware/auth');
 const { upload } = require('../config/cloudinary');
 
-// Public profile retrieval
-router.get('/:id', getUserProfile);
-
-// Protected profile updates
+// Specific / non-parameterized routes (MUST be before /:id)
+router.get('/blocked', protect, getBlockedUsers);
+router.post('/blocked', protect, getBlockedUsers);
 router.put('/profile', protect, updateUserProfile);
 router.post('/avatar', protect, upload.single('avatar'), uploadAvatar);
 
-// Rating / review submission
+// Parameterized routes
+router.get('/:id', getUserProfile);
 router.post('/:id/rate', protect, addReview);
-
-// Block / Unblock
-router.post('/blocked', protect, getBlockedUsers); // must be before /:id
 router.post('/:id/block', protect, blockUser);
 router.post('/:id/unblock', protect, unblockUser);
 

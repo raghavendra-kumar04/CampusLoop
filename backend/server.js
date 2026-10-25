@@ -9,6 +9,11 @@ const jwt = require('jsonwebtoken');
 // Load environment variables
 dotenv.config();
 
+if (!process.env.JWT_SECRET) {
+  console.error('FATAL: JWT_SECRET environment variable is missing.');
+  process.exit(1);
+}
+
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -20,6 +25,8 @@ const aiRoutes = require('./routes/aiRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 
+const User = require('./models/User');
+const Listing = require('./models/Listing');
 const Message = require('./models/Message');
 const Conversation = require('./models/Conversation');
 const Notification = require('./models/Notification');
@@ -58,9 +65,6 @@ app.get('/api/health', (req, res) => {
 });
 
 // Live Campus Statistics endpoint
-const Listing = require('./models/Listing');
-const User = require('./models/User');
-
 app.get('/api/stats/live', async (req, res) => {
   try {
     const activeListings = await Listing.countDocuments({ status: 'Available', isHidden: false });
@@ -103,7 +107,7 @@ io.use((socket, next) => {
     return next(new Error('Authentication error: No token provided'));
   }
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'jwt_secret_dev_key_123');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     socket.userId = decoded.id;
     next();
   } catch (err) {
@@ -116,7 +120,7 @@ const activeUsers = new Map(); // userId string -> Set of socketId strings
 
 io.on('connection', (socket) => {
   const userId = socket.userId;
-  
+
   if (!activeUsers.has(userId)) {
     activeUsers.set(userId, new Set());
   }
@@ -136,10 +140,13 @@ io.on('connection', (socket) => {
   socket.join(userId);
 
   // Join conversation chat room
-  socket.on('join_chat', (conversationId) => {
-    socket.join(conversationId);
-    console.log(`Socket ${socket.id} joined conversation: ${conversationId}`);
+  socket.on('join_chat', async (conversationId) => {
+    const conv = await Conversation.findById(conversationId);
+    if (conv && conv.participants.map(p => p.toString()).includes(socket.userId)) {
+      socket.join(conversationId);
+    }
   });
+
 
   // Leave conversation chat room
   socket.on('leave_chat', (conversationId) => {
@@ -162,6 +169,38 @@ io.on('connection', (socket) => {
       const conversation = await Conversation.findById(conversationId);
       if (!conversation) return;
 
+      // Verify sender is an authorized participant
+      const isParticipant = conversation.participants.some(
+        (p) => p.toString() === userId.toString()
+      );
+      if (!isParticipant) {
+        socket.emit('error', { message: 'Unauthorized to send message in this conversation' });
+        return;
+      }
+
+      const otherParticipants = conversation.participants.filter(
+        (p) => p.toString() !== userId.toString()
+      );
+
+      // Verify neither sender nor recipients have blocked each other
+      const senderUser = await User.findById(userId).select('blockedUsers');
+      if (senderUser && senderUser.blockedUsers && senderUser.blockedUsers.length > 0) {
+        const senderBlocked = senderUser.blockedUsers.map(id => id.toString());
+        if (otherParticipants.some(p => senderBlocked.includes(p.toString()))) {
+          socket.emit('error', { message: 'Cannot send message to a blocked user' });
+          return;
+        }
+      }
+
+      const blockedByRecipient = await User.exists({
+        _id: { $in: otherParticipants },
+        blockedUsers: userId,
+      });
+      if (blockedByRecipient) {
+        socket.emit('error', { message: 'Communication with this user is restricted' });
+        return;
+      }
+
       const message = await Message.create({
         conversation: conversationId,
         sender: userId,
@@ -180,10 +219,6 @@ io.on('connection', (socket) => {
       io.to(conversationId).emit('new_message', populatedMessage);
 
       // Create in-app Notifications for other participants
-      const otherParticipants = conversation.participants.filter(
-        (p) => p.toString() !== userId
-      );
-
       for (const recipientId of otherParticipants) {
         // Create DB notification
         const notification = await Notification.create({
@@ -211,7 +246,7 @@ io.on('connection', (socket) => {
     if (userSockets) {
       userSockets.delete(socket.id);
       console.log(`Socket disconnected: ${socket.id} for user ${userId}. Connections left: ${userSockets.size}`);
-      
+
       if (userSockets.size === 0) {
         activeUsers.delete(userId);
         io.emit('user_status_change', { userId, status: 'offline' });

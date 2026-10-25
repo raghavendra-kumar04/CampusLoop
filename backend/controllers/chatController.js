@@ -41,6 +41,18 @@ const startConversation = async (req, res) => {
       return res.status(404).json({ message: 'Listing not found' });
     }
 
+    // Check if receiver exists and verify neither user has blocked the other
+    const receiverUser = await User.findById(receiverId).select('blockedUsers');
+    if (!receiverUser) {
+      return res.status(404).json({ message: 'Receiver not found' });
+    }
+
+    const senderBlocked = senderUser.blockedUsers?.some(id => id.toString() === receiverId.toString());
+    const receiverBlocked = receiverUser.blockedUsers?.some(id => id.toString() === senderId.toString());
+    if (senderBlocked || receiverBlocked) {
+      return res.status(403).json({ message: 'Communication with this user is restricted.' });
+    }
+
     // Check if conversation already exists for this listing between these participants
     let conversation = await Conversation.findOne({
       listing: listingId,
@@ -105,7 +117,10 @@ const getMessages = async (req, res) => {
       return res.status(404).json({ message: 'Conversation not found' });
     }
 
-    if (!conversation.participants.includes(userId)) {
+    const isParticipant = conversation.participants.some(
+      (p) => p.toString() === userId.toString()
+    );
+    if (!isParticipant) {
       return res.status(401).json({ message: 'Not authorized to view this chat' });
     }
 
@@ -141,8 +156,32 @@ const sendMessage = async (req, res) => {
       return res.status(404).json({ message: 'Conversation not found' });
     }
 
-    if (!conversation.participants.includes(senderId)) {
+    const isParticipant = conversation.participants.some(
+      (p) => p.toString() === senderId.toString()
+    );
+    if (!isParticipant) {
       return res.status(401).json({ message: 'Not authorized to post to this chat' });
+    }
+
+    const otherParticipants = conversation.participants.filter(
+      (p) => p.toString() !== senderId.toString()
+    );
+
+    // Verify neither party has blocked the other
+    const senderUser = await User.findById(senderId).select('blockedUsers');
+    if (senderUser && senderUser.blockedUsers && senderUser.blockedUsers.length > 0) {
+      const senderBlocked = senderUser.blockedUsers.map(id => id.toString());
+      if (otherParticipants.some(p => senderBlocked.includes(p.toString()))) {
+        return res.status(403).json({ message: 'Cannot send message to a blocked user.' });
+      }
+    }
+
+    const blockedByOther = await User.exists({
+      _id: { $in: otherParticipants },
+      blockedUsers: senderId,
+    });
+    if (blockedByOther) {
+      return res.status(403).json({ message: 'Communication with this user is restricted.' });
     }
 
     let imageUrl = '';

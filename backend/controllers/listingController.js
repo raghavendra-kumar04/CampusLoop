@@ -87,16 +87,22 @@ const getListings = async (req, res) => {
 
     // Block filter: if authenticated, exclude listings from users they've blocked
     const jwt = require('jsonwebtoken');
-    let blockedUserIds = [];
     try {
       const authHeader = req.headers.authorization;
       if (authHeader && authHeader.startsWith('Bearer ')) {
         const token = authHeader.split(' ')[1];
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'jwt_secret_dev_key_123');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const requester = await User.findById(decoded.id).select('blockedUsers');
         if (requester && requester.blockedUsers && requester.blockedUsers.length > 0) {
-          blockedUserIds = requester.blockedUsers;
-          query.seller = { $nin: blockedUserIds };
+          const blockedIds = requester.blockedUsers.map(id => id.toString());
+          if (seller) {
+            // If requesting a specific seller that the user has blocked, return empty
+            if (blockedIds.includes(seller.toString())) {
+              return res.json([]);
+            }
+          } else {
+            query.seller = { $nin: requester.blockedUsers };
+          }
         }
       }
     } catch (e) { /* unauthenticated — ignore */ }
@@ -188,37 +194,14 @@ const createListing = async (req, res) => {
 
     const populatedListing = await Listing.findById(listing._id).populate('seller', 'name avatar');
 
-    // Notify all other users about this new item
+    // Broadcast live event to online clients without unbounded mass DB inserts
     try {
-      const users = await User.find({ _id: { $ne: req.user.id } });
-      const notifications = users.map(u => ({
-        recipient: u._id,
-        sender: req.user.id,
-        type: 'listing',
-        title: 'New Listing Available',
-        message: `${populatedListing.seller.name} uploaded a new item: "${title}"`,
-        link: `/item/${listing._id}`,
-      }));
-
-      if (notifications.length > 0) {
-        const createdNotifications = await Notification.insertMany(notifications);
-        const io = req.app.get('socketio');
-        if (io) {
-          createdNotifications.forEach((notif) => {
-            const populatedNotif = {
-              ...notif.toObject(),
-              sender: {
-                _id: req.user.id,
-                name: populatedListing.seller.name,
-                avatar: populatedListing.seller.avatar
-              }
-            };
-            io.to(notif.recipient.toString()).emit('new_notification', populatedNotif);
-          });
-        }
+      const io = req.app.get('socketio');
+      if (io) {
+        io.emit('new_listing_posted', populatedListing);
       }
     } catch (notifErr) {
-      console.error('Failed to dispatch new listing notifications:', notifErr);
+      console.error('Failed to dispatch new listing socket event:', notifErr);
     }
 
     res.status(201).json(populatedListing);
