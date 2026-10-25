@@ -82,6 +82,25 @@ const getListings = async (req, res) => {
       sortOptions = { createdAt: 1 };
     }
 
+    // Always hide admin-hidden listings from public
+    query.isHidden = false;
+
+    // Block filter: if authenticated, exclude listings from users they've blocked
+    const jwt = require('jsonwebtoken');
+    let blockedUserIds = [];
+    try {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'jwt_secret_dev_key_123');
+        const requester = await User.findById(decoded.id).select('blockedUsers');
+        if (requester && requester.blockedUsers && requester.blockedUsers.length > 0) {
+          blockedUserIds = requester.blockedUsers;
+          query.seller = { $nin: blockedUserIds };
+        }
+      }
+    } catch (e) { /* unauthenticated — ignore */ }
+
     // Perform query and populate seller information
     const listings = await Listing.find(query)
       .populate('seller', 'name avatar rating ratingsCount isVerified major')
@@ -104,6 +123,10 @@ const getListingById = async (req, res) => {
 
     if (!listing) {
       return res.status(404).json({ message: 'Listing not found' });
+    }
+
+    if (listing.isHidden) {
+      return res.status(404).json({ message: 'This listing is no longer available.' });
     }
 
     res.json(listing);

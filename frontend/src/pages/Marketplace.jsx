@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 import { CardSkeleton } from '../components/ui/Skeleton';
 import Checkbox from '../components/ui/Checkbox';
 import Dropdown from '../components/ui/Dropdown';
 import ListingCard from '../components/ListingCard';
+import SEO from '../components/SEO';
 import './Marketplace.css';
 
 const Marketplace = () => {
+  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [listings, setListings] = useState([]);
@@ -148,8 +151,19 @@ const Marketplace = () => {
   const conditionsList = ['New', 'Mint', 'Used', 'Boxed', 'Good', 'Fair'];
   const sortOptions = ['Most Recent', 'Price: Low to High', 'Price: High to Low'];
 
+  const visibleListings = listings.filter(item => {
+    if (!user || !user.blockedUsers || user.blockedUsers.length === 0) return true;
+    const sellerId = (item.seller?._id || item.seller)?.toString();
+    return !user.blockedUsers.map(id => (id._id || id).toString()).includes(sellerId);
+  });
+
   return (
     <main className="max-w-container-max mx-auto px-margin-mobile md:px-lg py-md md:py-lg min-h-screen">
+      <SEO
+        title={searchQuery ? `"${searchQuery}" Listings | Campus Marketplace` : 'Marketplace — College Textbooks, Tech & Dorm Essentials'}
+        description="Discover active student listings for textbooks, electronics, course gear, and dorm essentials on CampusLoop with zero platform fees."
+        canonical="/marketplace"
+      />
       <div className="flex flex-col md:flex-row gap-gutter">
         
         {/* Sticky Sidebar (Desktop) */}
@@ -298,7 +312,7 @@ const Marketplace = () => {
 
             {/* Mobile controls list */}
             <div className="md:hidden flex items-center justify-between border-t border-outline-variant/20 pt-sm">
-              <span className="text-sm text-outline">{listings.length} items found</span>
+              <span className="text-sm text-outline">{visibleListings.length} items found</span>
               <button
                 onClick={() => setShowMobileFilters(true)}
                 className="flex items-center gap-xs text-primary font-bold text-sm"
@@ -314,7 +328,7 @@ const Marketplace = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-md">
               {[1, 2, 3, 4, 5, 6].map(i => <CardSkeleton key={i} />)}
             </div>
-          ) : listings.length === 0 ? (
+          ) : visibleListings.length === 0 ? (
             <div className="py-xl flex flex-col items-center justify-center text-center space-y-sm bg-surface-container-lowest border border-outline-variant/10 rounded-2xl p-md">
               <span className="material-symbols-outlined text-[64px] text-outline">search_off</span>
               <h3 className="font-headline-md text-on-surface">No Listings Found</h3>
@@ -325,19 +339,19 @@ const Marketplace = () => {
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-md" id="product-grid">
-                {listings.slice(0, displayLimit).map(listing => (
+                {visibleListings.slice(0, displayLimit).map(listing => (
                   <ListingCard key={listing._id} listing={listing} />
                 ))}
               </div>
 
               {/* Load More Button */}
-              {listings.length > displayLimit && (
+              {visibleListings.length > displayLimit && (
                 <div className="flex justify-center pt-xl pb-lg">
                   <button
                     id="load-more"
                     onClick={handleLoadMore}
                     disabled={loadMoreLoading}
-                    className="px-lg py-3 bg-white border border-primary text-primary font-bold rounded-xl hover:bg-primary-container hover:text-on-primary-container transition-all duration-300 flex items-center gap-sm shadow-md active:scale-95"
+                    className="px-lg py-3 bg-surface-container-lowest border border-primary text-primary font-bold rounded-xl hover:bg-primary-container hover:text-on-primary-container transition-all duration-300 flex items-center gap-sm shadow-md active:scale-95"
                   >
                     {loadMoreLoading ? (
                       <>

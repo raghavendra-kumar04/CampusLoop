@@ -5,6 +5,8 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { isProfileComplete } from '../utils/profile';
 import ListingCard from '../components/ListingCard';
+import BlockReportModal from '../components/BlockReportModal';
+import SEO from '../components/SEO';
 import './ItemDetails.css';
 
 const ItemDetails = () => {
@@ -19,6 +21,7 @@ const ItemDetails = () => {
   const [isSaved, setIsSaved] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [chatStarting, setChatStarting] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   // AI Chat states
   const [aiChatOpen, setAiChatOpen] = useState(false);
@@ -195,6 +198,11 @@ const ItemDetails = () => {
   if (!listing) {
     return (
       <div className="max-w-container-max mx-auto px-margin-mobile py-xl text-center space-y-sm">
+        <SEO
+          title="Listing Not Found | CampusLoop"
+          description="The requested student marketplace listing is not active or has been removed."
+          noindex={true}
+        />
         <span className="material-symbols-outlined text-[64px] text-outline">error</span>
         <h2 className="font-extrabold text-lg text-on-surface">Listing Not Found</h2>
         <p className="text-xs text-on-surface-variant">The listing you are looking for is not active.</p>
@@ -207,8 +215,32 @@ const ItemDetails = () => {
 
   const isOwner = user && user._id === listing.seller?._id;
 
+  const productSchema = {
+    '@context': 'https://schema.org/',
+    '@type': 'Product',
+    name: listing.title,
+    image: listing.images || [],
+    description: listing.description || `${listing.title} on CampusLoop student marketplace.`,
+    category: listing.category,
+    offers: {
+      '@type': 'Offer',
+      priceCurrency: 'INR',
+      price: listing.price,
+      availability: listing.status === 'Available' ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      url: `https://campusloop-nine.vercel.app/item/${listing._id}`,
+    },
+  };
+
   return (
     <main className="max-w-container-max mx-auto px-margin-mobile md:px-lg pt-sm md:pt-lg pb-xl">
+      <SEO
+        title={`${listing.title} | CampusLoop Marketplace`}
+        description={listing.description ? listing.description.slice(0, 150) : `Check out ${listing.title} in ${listing.category} on CampusLoop student marketplace.`}
+        canonical={`/item/${listing._id}`}
+        image={listing.images?.[0] || 'https://campusloop-nine.vercel.app/og-image.jpg'}
+        noindex={listing.status !== 'Available' || listing.isHidden}
+        schema={productSchema}
+      />
       
       {listing.status === 'Sold' && (
         <div className="mb-sm bg-error-container/10 border border-error/20 text-error rounded-2xl p-sm flex items-center gap-sm shadow-sm select-none">
@@ -248,13 +280,13 @@ const ItemDetails = () => {
               <div className="absolute inset-0 flex items-center justify-between px-sm opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={() => setActiveImageIndex(prev => (prev === 0 ? listing.images.length - 1 : prev - 1))}
-                  className="w-10 h-10 rounded-full bg-surface/90 flex items-center justify-center shadow-lg hover:bg-white transition-colors"
+                  className="w-10 h-10 rounded-full bg-surface/90 flex items-center justify-center shadow-lg hover:bg-surface-container-high transition-colors"
                 >
                   <span className="material-symbols-outlined">chevron_left</span>
                 </button>
                 <button
                   onClick={() => setActiveImageIndex(prev => (prev === listing.images.length - 1 ? 0 : prev + 1))}
-                  className="w-10 h-10 rounded-full bg-surface/90 flex items-center justify-center shadow-lg hover:bg-white transition-colors"
+                  className="w-10 h-10 rounded-full bg-surface/90 flex items-center justify-center shadow-lg hover:bg-surface-container-high transition-colors"
                 >
                   <span className="material-symbols-outlined">chevron_right</span>
                 </button>
@@ -468,6 +500,17 @@ const ItemDetails = () => {
                 Ask AI about this item
               </button>
             )}
+
+            {/* Report Listing / Seller Button */}
+            {!isOwner && user && (
+              <button
+                onClick={() => setShowReportModal(true)}
+                className="w-full py-2.5 rounded-xl border border-outline-variant/30 text-on-surface-variant hover:text-red-500 hover:border-red-500/30 font-label-md text-xs flex items-center justify-center gap-1.5 transition-all"
+              >
+                <span className="material-symbols-outlined text-[16px]">flag</span>
+                Report Listing or Seller
+              </button>
+            )}
           </div>
 
         </div>
@@ -524,6 +567,15 @@ const ItemDetails = () => {
             >
               <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
             </button>
+            {user && (
+              <button
+                onClick={() => setShowReportModal(true)}
+                className="w-14 h-14 shrink-0 rounded-xl border border-outline-variant/30 text-on-surface-variant hover:text-red-500 flex items-center justify-center active:scale-95 transition-all"
+                title="Report listing or seller"
+              >
+                <span className="material-symbols-outlined text-[20px]">flag</span>
+              </button>
+            )}
           </>
         ) : (
           <div className="w-full flex flex-col gap-xs">
@@ -748,6 +800,18 @@ const ItemDetails = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Block & Report Modal */}
+      {showReportModal && listing?.seller && (
+        <BlockReportModal
+          targetUser={listing.seller}
+          listingId={listing._id}
+          onClose={() => setShowReportModal(false)}
+          onBlockSuccess={() => {
+            navigate('/marketplace');
+          }}
+        />
       )}
 
     </main>

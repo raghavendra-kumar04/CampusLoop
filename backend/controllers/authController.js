@@ -83,6 +83,11 @@ const loginUser = async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
+    // Check if account is blocked by admin
+    if (user.status === 'blocked') {
+      return res.status(403).json({ message: 'Your account has been suspended. Please contact support.' });
+    }
+
     res.json({
       _id: user._id,
       name: user.name,
@@ -95,6 +100,9 @@ const loginUser = async (req, res) => {
       rating: user.rating,
       ratingsCount: user.ratingsCount,
       savedItems: user.savedItems,
+      role: user.role,
+      status: user.status,
+      blockedUsers: user.blockedUsers,
       token: generateToken(user._id),
     });
   } catch (error) {

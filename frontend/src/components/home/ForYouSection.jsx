@@ -72,51 +72,51 @@ export default function ForYouSection({ recentListings = [] }) {
             )}
           </div>
 
-          {/* Right Column: Events & Opportunity Cards (Col span 4) */}
+          {/* Right Column: Safe Trading & Seller Highlights (Col span 4) */}
           <div className="md:col-span-4 space-y-gutter flex flex-col justify-between">
-            {/* Recommendation Card 1: Event */}
+            {/* Guide Card 1: Safe Campus Meetups */}
             <motion.div
               whileHover={{ y: -4 }}
-              onClick={() => navigate('/marketplace?category=Electronics')}
+              onClick={() => navigate('/terms')}
               className="bg-gradient-to-br from-indigo-900/80 to-slate-900/90 text-white p-lg rounded-3xl border border-indigo-500/20 shadow-lg cursor-pointer flex flex-col justify-between"
             >
               <div>
                 <span className="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 font-label-md text-xs uppercase tracking-wider mb-sm inline-block">
-                  Upcoming Workshop
+                  Campus Safety Guide
                 </span>
                 <h3 className="font-headline-md text-headline-md text-white mb-xs">
-                  AI & ML Engineering Meetup
+                  Public Campus Meetup Zones
                 </h3>
                 <p className="text-body-md text-slate-300 text-sm mb-md">
-                  Tomorrow · 4:30 PM · Student Union Center
+                  Always inspect items in person at verified spots like the Student Union, Library, or Campus Center.
                 </p>
               </div>
               <div className="flex items-center justify-between pt-xs border-t border-white/10">
-                <span className="text-xs text-indigo-300 font-medium">34 Peers Registered</span>
+                <span className="text-xs text-indigo-300 font-medium">Read Guidelines</span>
                 <span className="material-symbols-outlined text-[20px] text-white">arrow_forward</span>
               </div>
             </motion.div>
 
-            {/* Recommendation Card 2: Team / Opportunity */}
+            {/* Guide Card 2: Student Seller Guarantee */}
             <motion.div
               whileHover={{ y: -4 }}
-              onClick={() => navigate('/marketplace?search=Hackathon')}
+              onClick={() => navigate('/sell')}
               className="bg-surface-container-lowest dark:bg-slate-900/60 backdrop-blur-xl p-lg rounded-3xl border border-outline-variant/15 shadow-sm cursor-pointer"
             >
               <div className="flex items-center gap-2 mb-2">
-                <span className="material-symbols-outlined text-emerald-500">groups</span>
+                <span className="material-symbols-outlined text-emerald-500">verified_user</span>
                 <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                  Campus Opportunity
+                  Verified Peer Trading
                 </span>
               </div>
               <h4 className="font-headline-md text-[18px] text-on-surface mb-xs">
-                Hackathon Team — Looking for 2 members
+                List in 2 Minutes, Zero Platform Fees
               </h4>
               <p className="font-body-md text-sm text-on-surface-variant mb-sm">
-                Building a React + Python ML project for Campus Tech Week.
+                Pass down textbooks, electronics, and dorm gear to fellow students directly.
               </p>
               <span className="text-xs font-semibold text-primary inline-flex items-center gap-1">
-                Connect with Team <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                Post an Item Now <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
               </span>
             </motion.div>
           </div>

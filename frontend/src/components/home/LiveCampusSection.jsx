@@ -20,10 +20,10 @@ function AnimatedCounter({ value, duration = 2 }) {
 
 export default function LiveCampusSection() {
   const [stats, setStats] = useState({
-    studentsConnected: 1240,
-    activeListings: 327,
-    eventsDiscovered: 84,
-    newListingsToday: 12
+    studentsConnected: 0,
+    activeListings: 0,
+    itemsTraded: 0,
+    newListingsToday: 0
   });
 
   useEffect(() => {
@@ -33,8 +33,8 @@ export default function LiveCampusSection() {
         if (res.data) {
           setStats(res.data);
         }
-      } catch (err) {
-        console.warn('Using fallback live stats');
+      } catch {
+        // Keep zeros on error
       }
     };
     fetchStats();
@@ -106,7 +106,7 @@ export default function LiveCampusSection() {
             <p className="font-label-md text-label-md text-on-surface-variant">Active Marketplace Listings</p>
           </motion.div>
 
-          {/* Card 3: Events */}
+          {/* Card 3: Items Traded / Sold */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -116,16 +116,16 @@ export default function LiveCampusSection() {
           >
             <div className="flex justify-between items-center mb-md">
               <div className="w-12 h-12 rounded-2xl bg-secondary-container/20 text-secondary flex items-center justify-center group-hover:scale-110 transition-transform">
-                <span className="material-symbols-outlined text-[28px]">event</span>
+                <span className="material-symbols-outlined text-[28px]">handshake</span>
               </div>
               <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                This week
+                Completed
               </span>
             </div>
             <h3 className="font-display-lg text-[40px] font-extrabold text-on-surface mb-xs tracking-tight">
-              <AnimatedCounter value={stats.eventsDiscovered} />
+              <AnimatedCounter value={stats.itemsTraded} />
             </h3>
-            <p className="font-label-md text-label-md text-on-surface-variant">Campus Events & Activities</p>
+            <p className="font-label-md text-label-md text-on-surface-variant">Items Sold & Exchanged</p>
           </motion.div>
 
           {/* Card 4: Verified Safe Network */}

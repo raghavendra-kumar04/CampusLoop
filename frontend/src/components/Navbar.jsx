@@ -5,7 +5,7 @@ import { useNotification } from '../context/NotificationContext';
 import Switch from './Switch';
 
 const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const { unreadCount } = useNotification();
   const navigate = useNavigate();
   const location = useLocation();
@@ -32,8 +32,10 @@ const Navbar = () => {
   };
 
   const isMarketplace = location.pathname === '/marketplace';
+  const isHowItWorks = location.pathname === '/how-it-works';
   const isChat = location.pathname === '/messages';
   const isSell = location.pathname === '/sell';
+  const isAdminPage = location.pathname === '/admin';
 
   const handleProfileClick = () => {
     if (user) {
@@ -65,6 +67,16 @@ const Navbar = () => {
               Marketplace
             </Link>
             <Link
+              to="/how-it-works"
+              className={`font-label-md text-label-md pb-1 border-b-2 transition-all ${
+                isHowItWorks
+                  ? 'text-primary border-primary'
+                  : 'text-on-surface-variant hover:text-primary border-transparent'
+              }`}
+            >
+              How It Works
+            </Link>
+            <Link
               to="/messages"
               className={`font-label-md text-label-md pb-1 border-b-2 transition-all ${
                 isChat
@@ -84,6 +96,19 @@ const Navbar = () => {
             >
               Sell
             </Link>
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className={`font-label-md text-label-md pb-1 border-b-2 transition-all flex items-center gap-1 ${
+                  isAdminPage
+                    ? 'text-primary border-primary'
+                    : 'text-amber-600 hover:text-amber-700 dark:text-amber-400 border-transparent font-bold'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[16px]">shield_person</span>
+                Admin
+              </Link>
+            )}
           </div>
         </div>
 
@@ -143,6 +168,16 @@ const Navbar = () => {
             {/* Profile Dropdown */}
             {showProfileMenu && user && (
               <div className="absolute right-0 mt-2 w-48 bg-surface-container-lowest border border-outline-variant/30 rounded-xl shadow-lg py-2 z-50">
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    onClick={() => setShowProfileMenu(false)}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-amber-600 dark:text-amber-400 font-bold hover:bg-surface-container-high/50 transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">shield_person</span>
+                    Admin Panel
+                  </Link>
+                )}
                 <Link
                   to={`/profile/${user._id}`}
                   onClick={() => setShowProfileMenu(false)}

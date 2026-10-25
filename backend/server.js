@@ -17,6 +17,8 @@ const chatRoutes = require('./routes/chatRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const aiRoutes = require('./routes/aiRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const reportRoutes = require('./routes/reportRoutes');
 
 const Message = require('./models/Message');
 const Conversation = require('./models/Conversation');
@@ -47,6 +49,8 @@ app.use('/api/chats', chatRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/reports', reportRoutes);
 
 // Simple Healthcheck route
 app.get('/api/health', (req, res) => {
@@ -59,25 +63,25 @@ const User = require('./models/User');
 
 app.get('/api/stats/live', async (req, res) => {
   try {
-    const activeListings = await Listing.countDocuments({ status: 'Available' });
-    const totalStudents = await User.countDocuments();
+    const activeListings = await Listing.countDocuments({ status: 'Available', isHidden: false });
+    const totalStudents = await User.countDocuments({ role: 'user' });
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const newToday = await Listing.countDocuments({ createdAt: { $gte: today } });
-    const onlineCount = typeof activeUsers !== 'undefined' ? activeUsers.size : 0;
+    const newToday = await Listing.countDocuments({ createdAt: { $gte: today }, isHidden: false });
+    const itemsTraded = await Listing.countDocuments({ status: 'Sold' });
 
     res.json({
-      activeListings: activeListings || 327,
-      studentsConnected: Math.max(totalStudents * 8, onlineCount, 1240),
-      eventsDiscovered: 84 + newToday,
+      activeListings,
+      studentsConnected: totalStudents,
+      itemsTraded,
       newListingsToday: newToday
     });
-  } catch (err) {
+  } catch (_err) {
     res.json({
-      activeListings: 327,
-      studentsConnected: 1240,
-      eventsDiscovered: 84,
-      newListingsToday: 12
+      activeListings: 0,
+      studentsConnected: 0,
+      itemsTraded: 0,
+      newListingsToday: 0
     });
   }
 });

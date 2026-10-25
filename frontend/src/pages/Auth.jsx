@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import GetStartedButton from '../components/GetStartedButton';
+import SEO from '../components/SEO';
 import './Auth.css';
 
 const Auth = () => {
@@ -65,8 +66,8 @@ const Auth = () => {
       }
     }
 
-    // Validate university domain
-    if (!validateEmail(email)) {
+    // Validate university domain on registration only
+    if (!isLogin && !validateEmail(email)) {
       setError('Access restricted. You must register with a valid university email address (.edu or .ac.in).');
       return;
     }
@@ -74,13 +75,18 @@ const Auth = () => {
     setLoading(true);
     try {
       if (isLogin) {
-        await login(email, password);
+        const loggedUser = await login(email, password);
         toast.success('Welcome back!');
+        if (loggedUser?.role === 'admin' || loggedUser?.user?.role === 'admin' || email === 'admin@campusloop.org') {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
       } else {
         await register(name, email, password);
         toast.success('Student account created successfully!');
+        navigate('/');
       }
-      navigate('/');
     } catch (err) {
       toast.error(err.message || 'Authentication failed. Please check your credentials.');
       setError(err.message || 'Authentication failed. Please check your credentials.');
@@ -91,6 +97,12 @@ const Auth = () => {
 
   return (
     <div className="min-h-[calc(100vh-64px)] w-full flex items-center justify-center px-margin-mobile py-lg bg-surface">
+      <SEO
+        title={isLogin ? 'Sign In | CampusLoop' : 'Register Student Account | CampusLoop'}
+        description="Sign in or register for CampusLoop with your verified university email to buy and sell textbooks, electronics, and dorm essentials."
+        canonical="/auth"
+        noindex={true}
+      />
       <div className="w-full max-w-md bg-surface-container-lowest rounded-3xl p-md md:p-lg border border-outline-variant/10 shadow-lg relative overflow-hidden">
         
         {/* Design system decorative gradient corner */}
@@ -205,6 +217,16 @@ const Auth = () => {
           </button>
         </div>
 
+        <p className="mt-4 text-center text-[11px] text-on-surface-variant/70 relative z-10 leading-relaxed">
+          By signing in or registering, you agree to CampusLoop's{' '}
+          <Link to="/terms" className="underline hover:text-primary transition-colors">
+            Terms & Conditions
+          </Link>{' '}
+          and{' '}
+          <Link to="/privacy" className="underline hover:text-primary transition-colors">
+            Privacy Policy
+          </Link>.
+        </p>
       </div>
     </div>
   );

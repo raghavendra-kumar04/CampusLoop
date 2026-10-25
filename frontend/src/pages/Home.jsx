@@ -9,6 +9,7 @@ import LiveCampusSection from '../components/home/LiveCampusSection';
 import ForYouSection from '../components/home/ForYouSection';
 import ScrollStorySection from '../components/home/ScrollStorySection';
 import CampusLoopOrb from '../components/CampusLoopOrb';
+import SEO from '../components/SEO';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -45,6 +46,12 @@ const Home = () => {
 
   return (
     <main className="w-full select-none relative z-10">
+      <SEO
+        title="CampusLoop | Student Marketplace for College Communities"
+        description="CampusLoop is an exclusive peer-to-peer campus marketplace for verified college students. Buy, sell, and exchange textbooks, electronics, and dorm essentials safely."
+        canonical="/"
+      />
+
       {/* Hero Section with 3D CampusLoop Orb */}
       <motion.section 
         initial={{ opacity: 0, y: 30 }}
@@ -67,11 +74,11 @@ const Home = () => {
             </div>
 
             <h1 className="font-display-lg text-display-lg lg:text-[56px] text-on-surface mb-sm max-w-2xl tracking-tight leading-none">
-              Your Campus, <span className="text-primary-container">Your Marketplace</span>
+              CampusLoop — <span className="text-primary-container">Your Campus Marketplace</span>
             </h1>
 
             <p className="font-body-lg text-body-lg text-on-surface-variant mb-lg max-w-xl">
-              The premium way for students to buy, sell, and exchange. Join thousands of verified peers in your university community.
+              The trusted peer marketplace for college students. Buy, sell, and exchange textbooks, electronics, dorm essentials, and project gear safely within your verified university community.
             </p>
 
             {/* Hero Search Bar */}
@@ -233,39 +240,58 @@ const Home = () => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-sm mt-auto">
-                <div
-                  onClick={() => navigate('/marketplace?search=Sony')}
-                  className="bg-surface-container-lowest dark:bg-slate-800 p-sm rounded-2xl flex items-center gap-sm hover:shadow-md transition-shadow cursor-pointer border border-outline-variant/10"
-                >
-                  <div className="w-16 h-16 rounded-xl bg-surface-container-high overflow-hidden shrink-0">
-                    <img
-                      className="w-full h-full object-cover"
-                      alt="Sony Headphones"
-                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqqSSpoDSZCdipgQzuIo2RfBQRgEDcN4340FtMdEZJ05EVOD8LY7Teee620NB1y5QgnTPIYNYooMi3HF0nM5sRhY1TSUnj62MD6BzfgRtDzSWPieXWTHIKYjLD6cwztEW6eBLwl8IaSMvuJ_3qMVxkdTwx5-9nutxeLiU5ezikjZpJD1_royntYw5ViYoNrpBHnYo4HjojZNWxPDL6OGOBS443ApbJpSwSfQsmsNACUlwxMO-vGeq8PQ"
-                    />
-                  </div>
-                  <div>
-                    <h4 className="font-label-md text-label-md text-on-surface">Sony WH-1000XM4</h4>
-                    <p className="text-tertiary font-bold text-headline-md leading-none">₹180</p>
-                  </div>
-                </div>
-
-                <div
-                  onClick={() => navigate('/marketplace?search=Nespresso')}
-                  className="bg-surface-container-lowest dark:bg-slate-800 p-sm rounded-2xl flex items-center gap-sm hover:shadow-md transition-shadow cursor-pointer border border-outline-variant/10"
-                >
-                  <div className="w-16 h-16 rounded-xl bg-surface-container-high overflow-hidden shrink-0">
-                    <img
-                      className="w-full h-full object-cover"
-                      alt="Nespresso Mini"
-                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwGAqbVqNNundxO5Jy1XOrRHr9b24to48IpIaI_YXFrBRVOC_28rXTaBkGKMIdkmYCx-4J7YVDok2IJsJF5U5fhRdDzipSaVrbdWBByG0tZw83fTVazcEpYNbZa_tjZIQQ7hMzq5wVAOY0JyglMwRiBi6AIvAosF4y4V57ZKfilTDcgz4FHXFXDem6_Ben16wRMDS5UkUDC_1Ba3R27nNGwxRshAoD-6Dk7QfJj_QAMAQl2soYXJgoZQ"
-                    />
-                  </div>
-                  <div>
-                    <h4 className="font-label-md text-label-md text-on-surface">Nespresso Mini</h4>
-                    <p className="text-tertiary font-bold text-headline-md leading-none">₹40</p>
-                  </div>
-                </div>
+                {recentListings.length > 0 ? (
+                  recentListings.slice(0, 2).map((item) => (
+                    <div
+                      key={item._id}
+                      onClick={() => navigate(`/listing/${item._id}`)}
+                      className="bg-surface-container-lowest dark:bg-slate-800 p-sm rounded-2xl flex items-center gap-sm hover:shadow-md transition-shadow cursor-pointer border border-outline-variant/10"
+                    >
+                      <div className="w-16 h-16 rounded-xl bg-surface-container-high overflow-hidden shrink-0 flex items-center justify-center">
+                        {item.images?.[0] ? (
+                          <img
+                            className="w-full h-full object-cover"
+                            alt={item.title}
+                            src={item.images[0]}
+                          />
+                        ) : (
+                          <span className="material-symbols-outlined text-outline">image</span>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-label-md text-label-md text-on-surface truncate">{item.title}</h4>
+                        <p className="text-tertiary font-bold text-headline-md leading-none mt-1">₹{item.price}</p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <>
+                    <div
+                      onClick={() => navigate('/marketplace?category=Textbooks')}
+                      className="bg-surface-container-lowest dark:bg-slate-800 p-sm rounded-2xl flex items-center gap-sm hover:shadow-md transition-shadow cursor-pointer border border-outline-variant/10"
+                    >
+                      <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined text-primary text-[28px]">menu_book</span>
+                      </div>
+                      <div>
+                        <h4 className="font-label-md text-label-md text-on-surface">Textbooks & Notes</h4>
+                        <p className="text-caption text-on-surface-variant">Browse Active Listings</p>
+                      </div>
+                    </div>
+                    <div
+                      onClick={() => navigate('/marketplace?category=Electronics')}
+                      className="bg-surface-container-lowest dark:bg-slate-800 p-sm rounded-2xl flex items-center gap-sm hover:shadow-md transition-shadow cursor-pointer border border-outline-variant/10"
+                    >
+                      <div className="w-16 h-16 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined text-secondary text-[28px]">devices</span>
+                      </div>
+                      <div>
+                        <h4 className="font-label-md text-label-md text-on-surface">Tech & Electronics</h4>
+                        <p className="text-caption text-on-surface-variant">Browse Active Listings</p>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
             <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors pointer-events-none"></div>
@@ -280,30 +306,47 @@ const Home = () => {
                 </span>
                 <h2 className="font-headline-md text-headline-md">Recommended</h2>
               </div>
-              <p className="font-body-md text-body-md opacity-80 mb-lg">Based on your browsing history and major.</p>
+              <p className="font-body-md text-body-md opacity-80 mb-lg">Latest verified student posts and popular categories.</p>
 
               <div className="space-y-sm">
-                <div
-                  onClick={() => navigate('/marketplace?search=TI-84')}
-                  className="bg-on-primary-container/10 p-sm rounded-2xl border border-on-primary-container/10 hover:bg-on-primary-container/20 transition-colors cursor-pointer text-left"
-                >
-                  <span className="font-caption text-caption text-primary-fixed-dim uppercase tracking-widest mb-1 block">
-                    Engineering
-                  </span>
-                  <h4 className="font-label-md text-label-md mb-xs text-on-primary-container">TI-84 Plus Calculator</h4>
-                  <p className="text-[18px] font-bold text-tertiary-fixed-dim">₹35</p>
-                </div>
-
-                <div
-                  onClick={() => navigate('/marketplace?search=Mirror')}
-                  className="bg-on-primary-container/10 p-sm rounded-2xl border border-on-primary-container/10 hover:bg-on-primary-container/20 transition-colors cursor-pointer text-left"
-                >
-                  <span className="font-caption text-caption text-primary-fixed-dim uppercase tracking-widest mb-1 block">
-                    Housing
-                  </span>
-                  <h4 className="font-label-md text-label-md mb-xs text-on-primary-container">Full-Length Mirror</h4>
-                  <p className="text-[18px] font-bold text-tertiary-fixed-dim">₹15</p>
-                </div>
+                {recentListings.length > 2 ? (
+                  recentListings.slice(2, 4).map((item) => (
+                    <div
+                      key={item._id}
+                      onClick={() => navigate(`/listing/${item._id}`)}
+                      className="bg-on-primary-container/10 p-sm rounded-2xl border border-on-primary-container/10 hover:bg-on-primary-container/20 transition-colors cursor-pointer text-left"
+                    >
+                      <span className="font-caption text-caption text-primary-fixed-dim uppercase tracking-widest mb-1 block">
+                        {item.category || 'Campus Marketplace'}
+                      </span>
+                      <h4 className="font-label-md text-label-md mb-xs text-on-primary-container truncate">{item.title}</h4>
+                      <p className="text-[18px] font-bold text-tertiary-fixed-dim">₹{item.price}</p>
+                    </div>
+                  ))
+                ) : (
+                  <>
+                    <div
+                      onClick={() => navigate('/marketplace?category=Dorm')}
+                      className="bg-on-primary-container/10 p-sm rounded-2xl border border-on-primary-container/10 hover:bg-on-primary-container/20 transition-colors cursor-pointer text-left"
+                    >
+                      <span className="font-caption text-caption text-primary-fixed-dim uppercase tracking-widest mb-1 block">
+                        Campus Living
+                      </span>
+                      <h4 className="font-label-md text-label-md mb-xs text-on-primary-container">Dorm & Essentials</h4>
+                      <p className="text-[14px] text-on-primary-container/80">Explore items nearby</p>
+                    </div>
+                    <div
+                      onClick={() => navigate('/marketplace')}
+                      className="bg-on-primary-container/10 p-sm rounded-2xl border border-on-primary-container/10 hover:bg-on-primary-container/20 transition-colors cursor-pointer text-left"
+                    >
+                      <span className="font-caption text-caption text-primary-fixed-dim uppercase tracking-widest mb-1 block">
+                        Peer Exchange
+                      </span>
+                      <h4 className="font-label-md text-label-md mb-xs text-on-primary-container">All Campus Listings</h4>
+                      <p className="text-[14px] text-on-primary-container/80">Find student deals</p>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 

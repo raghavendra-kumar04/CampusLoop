@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
@@ -16,11 +16,8 @@ const ListingCard = ({ listing, onWishlistToggle, onDelete, widthClass = '' }) =
     }
   }, [user, listing]);
 
-  const handleCardClick = () => {
-    navigate(`/item/${listing._id}`);
-  };
-
   const handleSaveToggle = async (e) => {
+    e.preventDefault();
     e.stopPropagation();
     if (!user) {
       navigate('/auth');
@@ -54,6 +51,7 @@ const ListingCard = ({ listing, onWishlistToggle, onDelete, widthClass = '' }) =
   };
 
   const handleDeleteClick = async (e) => {
+    e.preventDefault();
     e.stopPropagation();
     if (window.confirm("Are you sure you want to delete this listing?")) {
       setLoading(true);
@@ -81,9 +79,9 @@ const ListingCard = ({ listing, onWishlistToggle, onDelete, widthClass = '' }) =
   const isOwner = user && listing.seller && (user._id === (listing.seller._id || listing.seller));
 
   return (
-    <div
-      onClick={handleCardClick}
-      className={`marketplace-card bg-surface-container-lowest rounded-2xl p-base hover-lift cursor-pointer shadow-sm select-none ${widthClass}`}
+    <Link
+      to={`/item/${listing._id}`}
+      className={`block marketplace-card bg-surface-container-lowest rounded-2xl p-base hover-lift cursor-pointer shadow-sm select-none ${widthClass}`}
     >
       {/* Cover Image aspect-[4/3] */}
       <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden mb-sm bg-surface-container">
@@ -176,7 +174,7 @@ const ListingCard = ({ listing, onWishlistToggle, onDelete, widthClass = '' }) =
           </span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 

@@ -99,6 +99,8 @@ export const AuthProvider = ({ children }) => {
     updateProfile,
     updateAvatar,
     setUser,
+    isAdmin: user?.role === 'admin',
+    blockedUsers: user?.blockedUsers || [],
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

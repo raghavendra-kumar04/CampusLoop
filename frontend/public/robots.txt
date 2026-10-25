@@ -1,0 +1,25 @@
+# CampusLoop - Search Engine Crawling Directives
+# Production Host: https://campusloop-nine.vercel.app/
+
+User-agent: *
+Allow: /
+Allow: /marketplace
+Allow: /how-it-works
+Allow: /privacy
+Allow: /terms
+Allow: /assets/
+Allow: /og-image.jpg
+Allow: /logo.png
+Allow: /favicon.svg
+
+# Disallow private user states, session authentication, and administrative controls
+Disallow: /admin
+Disallow: /messages
+Disallow: /profile/
+Disallow: /sell
+Disallow: /notifications
+Disallow: /review/
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://campusloop-nine.vercel.app/sitemap.xml

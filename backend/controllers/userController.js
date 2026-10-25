@@ -12,8 +12,27 @@ const getUserProfile = async (req, res) => {
       return res.status(404).json({ message: 'Student not found' });
     }
 
-    // Get listings posted by this user
-    const listings = await Listing.find({ seller: req.params.id }).sort({ createdAt: -1 });
+    // Check block relationship if authenticated viewer
+    const jwt = require('jsonwebtoken');
+    let viewerBlockedThisUser = false;
+    try {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'jwt_secret_dev_key_123');
+        if (decoded.id !== req.params.id) {
+          const viewer = await User.findById(decoded.id).select('blockedUsers');
+          if (viewer && viewer.blockedUsers.map(id => id.toString()).includes(req.params.id)) {
+            viewerBlockedThisUser = true;
+          }
+        }
+      }
+    } catch (e) { /* ignore */ }
+
+    // Get listings posted by this user (excluding hidden ones)
+    const listings = viewerBlockedThisUser
+      ? []
+      : await Listing.find({ seller: req.params.id, isHidden: false }).sort({ createdAt: -1 });
 
     // Get reviews received by this user
     const reviews = await Review.find({ seller: req.params.id })
@@ -24,6 +43,7 @@ const getUserProfile = async (req, res) => {
       user,
       listings,
       reviews,
+      isBlocked: viewerBlockedThisUser,
     });
   } catch (error) {
     console.error('GetUserProfile Error:', error);

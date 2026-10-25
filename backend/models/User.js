@@ -15,7 +15,8 @@ const userSchema = new mongoose.Schema({
     trim: true,
     validate: {
       validator: function (v) {
-        // Validate that email ends with .edu or .ac.in
+        // Allow admin email or validate that email ends with .edu or .ac.in
+        if (v === 'admin@campusloop.org') return true;
         return /\.edu$|\.ac\.in$/.test(v);
       },
       message: props => `${props.value} is not a valid campus email. You must register with a .edu or .ac.in email address.`,
@@ -61,6 +62,48 @@ const userSchema = new mongoose.Schema({
       ref: 'Listing',
     },
   ],
+  // Role & Admin
+  role: {
+    type: String,
+    enum: ['user', 'admin'],
+    default: 'user',
+  },
+  // Account status managed by admin
+  status: {
+    type: String,
+    enum: ['active', 'blocked', 'restricted'],
+    default: 'active',
+  },
+  // Block system
+  blockedUsers: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+  ],
+  blockedBy: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+  ],
+  // Report / moderation tracking
+  reportCount: {
+    type: Number,
+    default: 0,
+  },
+  warningCount: {
+    type: Number,
+    default: 0,
+  },
+  restrictedUntil: {
+    type: Date,
+    default: null,
+  },
+  adminNotes: {
+    type: String,
+    default: '',
+  },
 }, {
   timestamps: true,
 });

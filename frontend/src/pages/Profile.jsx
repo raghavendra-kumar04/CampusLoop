@@ -6,6 +6,7 @@ import { isProfileComplete } from '../utils/profile';
 import RatingStars from '../components/RatingStars';
 import ListingCard from '../components/ListingCard';
 import Button from '../components/ui/Button';
+import BlockReportModal from '../components/BlockReportModal';
 import './Profile.css';
 
 const Profile = () => {
@@ -43,6 +44,10 @@ const Profile = () => {
   // Custom Toast Popup State for upload warnings
   const [toast, setToast] = useState({ show: false, message: '' });
 
+  // Block & Report State
+  const [showBlockReportModal, setShowBlockReportModal] = useState(false);
+  const [isBlockedByViewer, setIsBlockedByViewer] = useState(false);
+
   const isOwnProfile = user && user._id === id;
 
   const fetchProfileData = async () => {
@@ -52,6 +57,10 @@ const Profile = () => {
       setProfileUser(res.data.user);
       setProfileListings(res.data.listings);
       setProfileReviews(res.data.reviews);
+      setIsBlockedByViewer(
+        res.data.isBlocked ||
+        Boolean(user?.blockedUsers?.map(bid => (bid._id || bid).toString()).includes(id))
+      );
 
       setEditForm({
         name: res.data.user.name,
@@ -288,6 +297,24 @@ const Profile = () => {
                 Edit Biography
               </Button>
             )}
+
+            {!isOwnProfile && user && (
+              <div className="flex items-center gap-2 mt-sm">
+                <button
+                  onClick={() => setShowBlockReportModal(true)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+                    isBlockedByViewer
+                      ? 'bg-red-500/10 text-red-600 border border-red-500/30 hover:bg-red-500/20'
+                      : 'bg-surface-container border border-outline-variant/30 text-on-surface hover:bg-surface-container-high'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[16px]">
+                    {isBlockedByViewer ? 'block' : 'flag'}
+                  </span>
+                  {isBlockedByViewer ? 'Blocked (Manage)' : 'Report / Block'}
+                </button>
+              </div>
+            )}
           </div>
 
         </div>
@@ -391,7 +418,19 @@ const Profile = () => {
         {/* Listings Tab */}
         {activeTab === 'listings' && (
           <div>
-            {profileListings.length === 0 ? (
+            {isBlockedByViewer ? (
+              <div className="py-xl text-center border border-dashed border-red-500/30 bg-red-500/5 rounded-3xl p-lg">
+                <span className="material-symbols-outlined text-[48px] text-red-500 mb-2">block</span>
+                <h3 className="font-bold text-sm text-on-surface">You have blocked this student</h3>
+                <p className="text-xs text-on-surface-variant mt-1">Their listing history and market items are hidden from your view.</p>
+                <button
+                  onClick={() => setShowBlockReportModal(true)}
+                  className="mt-3 px-4 py-2 bg-surface-container hover:bg-surface-container-high rounded-xl text-xs font-bold transition-colors"
+                >
+                  Manage Block / Unblock
+                </button>
+              </div>
+            ) : profileListings.length === 0 ? (
               <div className="py-xl text-center text-xs text-on-surface-variant border border-dashed border-outline-variant/20 bg-surface-container-lowest rounded-3xl p-md">
                 No active listings posted yet.
               </div>
@@ -583,6 +622,18 @@ const Profile = () => {
           <span className="material-symbols-outlined text-[20px]">error</span>
           <span className="font-semibold text-xs">{toast.message}</span>
         </div>
+      )}
+
+      {/* Block & Report Modal */}
+      {showBlockReportModal && profileUser && (
+        <BlockReportModal
+          targetUser={profileUser}
+          onClose={() => setShowBlockReportModal(false)}
+          onBlockSuccess={(nowBlocked) => {
+            setIsBlockedByViewer(nowBlocked);
+            fetchProfileData();
+          }}
+        />
       )}
 
     </main>

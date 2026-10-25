@@ -63,6 +63,15 @@ const listingSchema = new mongoose.Schema({
     enum: ['Available', 'Pending', 'Sold'],
     default: 'Available',
   },
+  // Admin moderation
+  isHidden: {
+    type: Boolean,
+    default: false,
+  },
+  adminNote: {
+    type: String,
+    default: '',
+  },
 }, {
   timestamps: true,
 });

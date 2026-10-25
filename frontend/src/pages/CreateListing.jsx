@@ -514,7 +514,7 @@ const CreateListing = () => {
           <div className="flex flex-col gap-4">
             <span className="font-label-md text-label-md text-primary uppercase tracking-widest px-1">Live Preview</span>
             
-            <div className="bg-surface rounded-2xl overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.06)] border border-surface-variant/50 flex flex-col group hover:shadow-[0_12px_48px_rgba(0,0,0,0.12)] transition-shadow duration-500 bg-surface-container-lowest">
+            <div className="bg-surface-container-lowest rounded-2xl overflow-hidden shadow-xl border border-outline-variant/20 flex flex-col group hover:shadow-2xl transition-all duration-500">
               
               {/* Preview Image Area */}
               <div className="relative aspect-[4/3] bg-surface-container overflow-hidden">
@@ -527,7 +527,7 @@ const CreateListing = () => {
                 )}
                 
                 <div className="absolute top-4 left-4">
-                  <span className="bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-caption font-label-md text-on-surface shadow-sm">
+                  <span className="bg-surface-container-lowest/85 dark:bg-slate-900/85 backdrop-blur-md px-3 py-1 rounded-full text-caption font-label-md text-on-surface border border-outline-variant/30 shadow-sm">
                     {formData.category}
                   </span>
                 </div>
@@ -576,7 +576,7 @@ const CreateListing = () => {
                   </div>
                   <div className="flex flex-col">
                     <span className="font-label-md text-label-md text-on-surface">
-                      {user?.name || 'Alex Rivera'}
+                      {user?.name || 'Student Seller'}
                     </span>
                     <span className="text-caption font-caption text-on-surface-variant">Verified Student</span>
                   </div>

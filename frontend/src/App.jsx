@@ -17,6 +17,11 @@ import CreateListing from './pages/CreateListing';
 import Auth from './pages/Auth';
 import Notifications from './pages/Notifications';
 import Review from './pages/Review';
+import AdminPanel from './pages/AdminPanel';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsAndConditions from './pages/TermsAndConditions';
+import HowItWorks from './pages/HowItWorks';
+import NotFound from './pages/NotFound';
 import AIAssistant from './components/AIAssistant';
 
 const Background3D = React.lazy(() => import('./components/Background3D'));
@@ -35,6 +40,25 @@ const ProtectedRoute = ({ children }) => {
 
   if (!user) {
     return <Navigate to="/auth" replace />;
+  }
+
+  return children;
+};
+
+// Admin Route Guard
+const AdminRoute = ({ children }) => {
+  const { user, loading, isAdmin } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-background">
+        <span className="material-symbols-outlined text-[48px] text-primary animate-spin">sync</span>
+      </div>
+    );
+  }
+
+  if (!user || !isAdmin) {
+    return <Navigate to="/" replace />;
   }
 
   return children;
@@ -72,7 +96,10 @@ function AppContent() {
             <Route path="/" element={<Home />} />
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/item/:id" element={<ItemDetails />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsAndConditions />} />
 
             {/* Protected routes */}
             <Route
@@ -115,9 +142,17 @@ function AppContent() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <AdminPanel />
+                </AdminRoute>
+              }
+            />
             
-            {/* Fallback */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            {/* Fallback 404 Route */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
         
