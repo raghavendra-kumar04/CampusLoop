@@ -30,7 +30,6 @@
 - [🏗️ System Architecture](#️-system-architecture)
 - [💻 Tech Stack](#-tech-stack)
 - [🚀 Quick Start & Installation](#-quick-start--installation)
-- [🔐 Admin Setup & Credentials](#-admin-setup--credentials)
 - [📡 API Endpoints](#-api-endpoints)
 - [🔍 SEO & Legal Compliance](#-seo--legal-compliance)
 - [🤝 Community & Safety Guidelines](#-community--safety-guidelines)
@@ -57,27 +56,6 @@ CampusLoop includes a dedicated, role-protected **Admin Control Panel** (`/admin
 - **User Actions:** Restrict, block, or delete malicious or violating accounts.
 - **Listing Moderation:** Hide or delete prohibited listings (*academic dishonesty material, weapons, unauthorized items*).
 - **Incident Reports Desk:** Review real-time user-generated reports with full context (reporter, target user, target listing, reason) and take immediate action.
-
----
-
-## 🔐 Admin Setup & Credentials
-
-An administrator account can be created in the database using the built-in seed script:
-
-### Default Admin Credentials
-| Field | Value |
-| :--- | :--- |
-| **Email** | `admin@campusloop.org` |
-| **Password** | `admin@campusloop` |
-| **Role** | `admin` |
-| **Admin Route** | `/admin` |
-
-### To Seed the Admin Account:
-```bash
-cd backend
-node seedAdmin.js
-```
-*(If an admin with `admin@campusloop.org` already exists, the script safely exits without overwriting).*
 
 ---
 
